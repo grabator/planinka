@@ -539,30 +539,41 @@
     var el = document.getElementById('wx');
     if (!el || !wxData) return;
     var c = wxData.current, d = wxData.daily, now = wxInfo(c.weather_code);
-    var DAYS = { bs: ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
-    var days = '';
-    for (var i = 1; i < Math.min(4, d.time.length); i++) {
+    var DAYS = { bs: ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
+    var n = Math.min(4, d.time.length), lo = Infinity, hi = -Infinity, i;
+    for (i = 0; i < n; i++) { lo = Math.min(lo, d.temperature_2m_min[i]); hi = Math.max(hi, d.temperature_2m_max[i]); }
+    var span = Math.max(1, hi - lo), days = '';
+    for (i = 1; i < n; i++) {
       var w = wxInfo(d.weather_code[i]), dt = parseDate(d.time[i]);
-      days += '<li><span>' + DAYS[lang][dt.getDay()] + '</span>' + ic(w.icon) + '<b>' + Math.round(d.temperature_2m_max[i]) + '°</b><small>' + Math.round(d.temperature_2m_min[i]) + '°</small></li>';
+      var mn = d.temperature_2m_min[i], mx = d.temperature_2m_max[i];
+      days += '<li style="--d:' + i + '"><span class="wx-dn">' + esc(i === 1 ? t('wxTomorrow') : DAYS[lang][dt.getDay()]) + '</span>' + ic(w.icon) +
+        '<span class="wx-range"><small>' + Math.round(mn) + '°</small><i style="--a:' + ((mn - lo) / span * 100).toFixed(1) + '%;--b:' + ((hi - mx) / span * 100).toFixed(1) + '%"></i><b>' + Math.round(mx) + '°</b></span></li>';
     }
-    var snow = c.snow_depth != null && c.snow_depth > 0.01 ? '<span class="wx-chip">' + ic('snow') + esc(t('wxSnow', { cm: Math.round(c.snow_depth * 100) })) + '</span>' : '';
-    el.innerHTML = '<div class="wx-now"><p class="wx-label"><span class="wx-live"></span>' + esc(t('wxTitle', { place: D.place })) + '</p>' +
-      '<div class="wx-main">' + ic(now.icon, 'wx-big') + '<b>' + Math.round(c.temperature_2m) + '°C</b><span>' + esc(now.text) + '</span></div>' +
-      '<p class="wx-meta"><span class="wx-chip">' + ic('wind') + Math.round(c.wind_speed_10m) + ' km/h</span>' + snow + '</p></div>' +
-      '<ul class="wx-days" aria-label="' + esc(t('wxNext')) + '">' + days + '</ul>';
+    var chips = '<span class="wx-chip">' + ic('wind') + Math.round(c.wind_speed_10m) + ' km/h</span>';
+    if (c.snow_depth != null && c.snow_depth > 0.01) chips += '<span class="wx-chip">' + ic('snow') + esc(t('wxSnow', { cm: Math.round(c.snow_depth * 100) })) + '</span>';
+    if (d.temperature_2m_max && d.temperature_2m_max.length) chips += '<span class="wx-chip">' + esc(t('wxToday')) + ' ' + Math.round(d.temperature_2m_max[0]) + '° / ' + Math.round(d.temperature_2m_min[0]) + '°</span>';
+    var feels = c.apparent_temperature != null ? '<span class="wx-feels">' + esc(t('wxFeels', { t: Math.round(c.apparent_temperature) })) + '</span>' : '';
+    var title = D.weather.title ? L(D.weather.title) : t('wxTitle', { place: D.place });
+    el.className = 'wx reveal in wx-' + now.icon + (c.is_day === 0 ? ' wx-night' : '');
+    el.innerHTML = '<div class="wx-sky" aria-hidden="true"><span class="wx-fall"></span><span class="wx-fall wx-fall-2"></span><span class="wx-glow"></span>' +
+      '<svg class="wx-mtn" viewBox="0 0 600 120" preserveAspectRatio="none"><path d="M0 120 L0 78 L70 40 L120 66 L190 18 L250 58 L300 34 L370 76 L430 30 L500 64 L560 44 L600 60 L600 120Z"/><path class="wx-mtn-2" d="M0 120 L0 96 L90 70 L160 92 L240 62 L330 94 L420 72 L520 98 L600 80 L600 120Z"/></svg></div>' +
+      '<div class="wx-now"><p class="wx-label"><span class="wx-live"></span>' + esc(title) + '</p>' +
+      '<div class="wx-main"><span class="wx-icon">' + ic(now.icon, 'wx-big') + '</span><div><b class="wx-temp">' + Math.round(c.temperature_2m) + '<sup>°C</sup></b>' +
+      '<span class="wx-cond">' + esc(now.text) + '</span>' + feels + '</div></div>' +
+      '<p class="wx-meta">' + chips + '</p></div>' +
+      '<div class="wx-next"><p class="wx-next-t">' + esc(t('wxNext')) + '</p><ul class="wx-days">' + days + '</ul></div>';
     el.hidden = false;
-    requestAnimationFrame(function () { el.classList.add('in'); });
   }
   function loadWeather() {
     if (!D.weather) return;
     if (wxData) { drawWeather(); return; }
-    var key = 'planinka-wx-' + D.weather.lat + ',' + D.weather.lon;
+    var key = 'planinka-wx2-' + D.weather.lat + ',' + D.weather.lon;
     try {
       var cached = JSON.parse(sessionStorage.getItem(key) || 'null');
       if (cached && Date.now() - cached.t < 30 * 60 * 1000) { wxData = cached.d; drawWeather(); return; }
     } catch (e) { /* nema sessionStorage */ }
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + D.weather.lat + '&longitude=' + D.weather.lon +
-      '&current=temperature_2m,weather_code,wind_speed_10m,snow_depth&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FSarajevo&forecast_days=4';
+      '&current=temperature_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,snow_depth&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FSarajevo&forecast_days=4';
     fetch(url).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.current) return;
       wxData = j;

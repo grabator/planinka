@@ -501,25 +501,62 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .foot-brand .brand-logo { height: 30px; }
 
 /* ---------- vrijeme uživo ---------- */
-.wx { display: grid; gap: 16px; margin-bottom: 22px; padding: 20px; border-radius: 24px; color: #fff; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-2) 92%, #000) 0%, color-mix(in srgb, var(--accent-2) 70%, var(--accent)) 100%); box-shadow: 0 20px 44px -24px rgba(0, 0, 0, 0.45); position: relative; overflow: hidden; }
-.wx::after { content: ''; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%); pointer-events: none; }
-.wx-label { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.9; }
-.wx-live { width: 8px; height: 8px; border-radius: 50%; background: #5ee08a; box-shadow: 0 0 0 0 rgba(94, 224, 138, 0.7); animation: wx-pulse 1.8s infinite; }
-@keyframes wx-pulse { 70% { box-shadow: 0 0 0 9px rgba(94, 224, 138, 0); } 100% { box-shadow: 0 0 0 0 rgba(94, 224, 138, 0); } }
-.wx-main { display: flex; align-items: center; gap: 12px; margin: 8px 0 10px; flex-wrap: wrap; }
-.wx-main .wx-big { width: 46px; height: 46px; stroke-width: 1.4; }
-.wx-main b { font-family: 'Fraunces', serif; font-size: 2.6rem; line-height: 1; font-weight: 600; }
-.wx-main > span { font-weight: 600; opacity: 0.92; }
+.wx { --wx-a: #3d5a73; --wx-b: #8fb3cc; --wx-glow: rgba(255, 255, 255, 0.35); position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 22px; margin-bottom: 22px; padding: 22px 22px 26px; border-radius: 28px; color: #fff; background: linear-gradient(160deg, var(--wx-a) 0%, var(--wx-b) 100%); box-shadow: 0 30px 60px -32px rgba(10, 20, 30, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25); animation: wx-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes wx-in { from { opacity: 0; transform: translateY(20px) scale(0.98); } }
+.wx-snow, .wx-fog { --wx-a: #4b6378; --wx-b: #b9cfdf; }
+.wx-sun { --wx-a: #2f7bbf; --wx-b: #9fd0f0; --wx-glow: rgba(255, 220, 130, 0.65); }
+.wx-cloudsun { --wx-a: #4a7397; --wx-b: #b5cfe2; --wx-glow: rgba(255, 220, 140, 0.45); }
+.wx-cloud { --wx-a: #56626e; --wx-b: #a3b0bc; }
+.wx-rain, .wx-storm { --wx-a: #2e3d4c; --wx-b: #6f8295; }
+.wx-night { --wx-a: #101b2d; --wx-b: #34496a; --wx-glow: rgba(200, 215, 255, 0.25); }
+.wx-sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.wx-glow { position: absolute; width: 260px; height: 260px; right: -70px; top: -90px; border-radius: 50%; background: radial-gradient(circle, var(--wx-glow), transparent 68%); animation: wx-breathe 6s ease-in-out infinite; }
+@keyframes wx-breathe { 50% { transform: scale(1.12); opacity: 0.8; } }
+.wx-mtn { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 34%; fill: rgba(255, 255, 255, 0.1); }
+.wx-mtn .wx-mtn-2 { fill: rgba(255, 255, 255, 0.12); }
+.wx-fall { position: absolute; inset: -100% 0 0; display: none; background-image: radial-gradient(2px 2px at 20px 30px, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 80px 90px, #fff 50%, transparent 51%), radial-gradient(2.5px 2.5px at 140px 50px, rgba(255,255,255,.9) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 190px 140px, #fff 50%, transparent 51%), radial-gradient(2px 2px at 50px 170px, rgba(255,255,255,.8) 50%, transparent 51%); background-size: 220px 200px; animation: wx-fall 9s linear infinite; opacity: 0.85; }
+.wx-fall-2 { background-size: 160px 150px; animation-duration: 14s; opacity: 0.5; }
+@keyframes wx-fall { to { transform: translateY(50%); } }
+.wx-snow .wx-fall { display: block; }
+.wx-rain .wx-fall, .wx-storm .wx-fall { display: block; background-image: linear-gradient(transparent 0 60%, rgba(255,255,255,.45) 60% 100%); background-size: 3px 26px; background-position: 0 0; filter: blur(0.3px); animation-duration: 1.2s; transform-origin: center; }
+.wx-rain .wx-fall-2, .wx-storm .wx-fall-2 { background-size: 2px 34px; margin-left: 9px; animation-duration: 1.6s; }
+.wx-night .wx-glow { width: 44px; height: 44px; right: 30px; top: 26px; background: none; box-shadow: inset -11px 7px 0 0 #f3efdf; filter: drop-shadow(0 0 14px rgba(230, 235, 255, 0.55)); transform: rotate(-12deg); animation: none; }
+.wx-night:not(.wx-snow):not(.wx-rain):not(.wx-storm) .wx-fall { display: block; inset: 0; animation: wx-twinkle 3.5s ease-in-out infinite alternate; opacity: 0.7; }
+.wx-night:not(.wx-snow):not(.wx-rain):not(.wx-storm) .wx-fall-2 { animation-delay: -1.7s; opacity: 0.45; }
+@keyframes wx-twinkle { from { opacity: 0.25; } }
+.wx-label { display: inline-flex; align-items: center; gap: 9px; padding: 6px 12px 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.wx-live { width: 8px; height: 8px; border-radius: 50%; background: #6ff0a0; box-shadow: 0 0 0 0 rgba(111, 240, 160, 0.7); animation: wx-pulse 1.8s infinite; }
+@keyframes wx-pulse { 70% { box-shadow: 0 0 0 9px rgba(111, 240, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(111, 240, 160, 0); } }
+.wx-main { display: flex; align-items: center; gap: 16px; margin: 18px 0 16px; }
+.wx-icon { display: grid; place-items: center; width: 78px; height: 78px; flex: none; border-radius: 24px; background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.wx-icon .wx-big { width: 46px; height: 46px; stroke-width: 1.5; animation: wx-float 4s ease-in-out infinite; }
+.wx-sun .wx-icon .wx-big { animation: wx-spin 24s linear infinite; color: #ffe08a; }
+@keyframes wx-float { 50% { transform: translateY(-4px); } }
+@keyframes wx-spin { to { transform: rotate(360deg); } }
+.wx-temp { display: block; font-family: 'Manrope', system-ui, sans-serif; font-size: 3.6rem; line-height: 0.95; font-weight: 700; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; text-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); }
+.wx-temp sup { font-size: 0.38em; vertical-align: 0; position: relative; top: -1.2em; margin-left: 4px; font-weight: 600; letter-spacing: 0; opacity: 0.85; }
+.wx-cond { display: block; margin-top: 6px; font-size: 1.05rem; font-weight: 700; }
+.wx-feels { display: block; font-size: 0.875rem; opacity: 0.8; }
 .wx-meta { display: flex; flex-wrap: wrap; gap: 8px; }
-.wx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); font-size: 0.8125rem; font-weight: 700; }
+.wx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 0.8125rem; font-weight: 700; }
 .wx-chip .ic { width: 16px; height: 16px; }
-.wx-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.wx-days li { display: grid; justify-items: center; gap: 4px; padding: 10px 6px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); font-size: 0.8125rem; }
-.wx-days li span { font-weight: 700; opacity: 0.85; }
+.wx-next { padding: 16px; border-radius: 22px; background: rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.wx-next-t { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; margin-bottom: 6px; }
+.wx-days { list-style: none; margin: 0; padding: 0; display: grid; }
+.wx-days li { display: grid; grid-template-columns: 1fr 30px 1.4fr; align-items: center; gap: 12px; padding: 10px 0; animation: wx-in 0.7s calc(0.2s + var(--d, 0) * 0.12s) both; }
+.wx-days li + li { border-top: 1px solid rgba(255, 255, 255, 0.16); }
+.wx-dn { font-weight: 700; font-size: 0.9375rem; }
 .wx-days .ic { width: 26px; height: 26px; }
-.wx-days b { font-size: 1.05rem; }
-.wx-days small { opacity: 0.7; }
-@media (min-width: 760px) { .wx { grid-template-columns: 1fr 1.1fr; align-items: center; padding: 26px 30px; } }
+.wx-range { display: grid; grid-template-columns: 30px 1fr 30px; align-items: center; gap: 8px; font-size: 0.9375rem; }
+.wx-range small { opacity: 0.7; text-align: right; font-size: inherit; }
+.wx-range i { position: relative; height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.18); }
+.wx-range i::after { content: ''; position: absolute; top: 0; bottom: 0; left: var(--a); right: var(--b); min-width: 8px; border-radius: 6px; background: linear-gradient(90deg, #a8dcff, #ffd27a); }
+@media (min-width: 760px) {
+  .wx { grid-template-columns: 1.05fr 1fr; align-items: center; gap: 32px; padding: 32px 34px 36px; }
+  .wx-temp { font-size: 4.4rem; }
+  .wx-icon { width: 92px; height: 92px; border-radius: 28px; }
+  .wx-icon .wx-big { width: 54px; height: 54px; }
+}
 
 /* ---------- doručak ---------- */
 .bf-grid { display: grid; gap: 22px; align-items: center; }

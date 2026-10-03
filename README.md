@@ -57,6 +57,29 @@ robots.txt, sitemap.xml
 6. **Slika za dijeljenje (og.jpg):** 1200 × 630 px, npr. najbolja fotografija vikendice sa imenom.
 7. **robots.txt i sitemap.xml:** zamijeni adresu pravim domenom.
 
+## Dodatne opcije (u `data/vikendica.js`)
+
+Sve je opcionalno; ako polje ne postoji, stranica radi kao demo Planinka.
+
+| Polje | Šta radi |
+|---|---|
+| `heroVideo`, `heroVideoWebm`, `heroPoster` | video preko cijelog prvog ekrana (MP4 + WebM, slika dok se učitava) |
+| `heroVideoLoop: false` | video se pusti jednom i stane na zadnjem kadru |
+| `heroLogo: { mark, word }` | animirani logo umjesto naslova: znak se otkrije, ime se "ispiše" (bijeli PNG bez pozadine) |
+| `theme: { bg, accent, ... }` | boje stranice (iste varijable kao u `css/style.css`) |
+| `seasons: false` | bez prekidača zima/ljeto (npr. kad klijent ima samo zimske slike) |
+| `rooms: [...]` | sekcija "Sobe" (slika, naziv, kreveti, broj osoba, opis, dugme "Pitaj za ovu sobu") i izbor sobe u upitu |
+| `pricing: null` | cijene na upit: nema kalkulatora, ostaje izbor datuma i upit na Viber/WhatsApp |
+| `maxGuests`, `minNights` | koriste se kad je `pricing: null` |
+| `aboutImages: [a, b]` | prave slike u sekciji "O nama" umjesto ilustracija |
+| `locationImage`, `locationLead` | slika/mapa klijenta i rečenica u sekciji "Lokacija" |
+| `badge`, `demoNote` | tekst na značkici prvog ekrana i napomena u footeru |
+| `ui: { kljuc: { bs, en } }` | promjena bilo kojeg teksta interfejsa iz `js/i18n.js` (npr. `aboutTitle`) |
+| `reviews: []`, `faq: []`, `activities: null` | prazno = sekcija se ne prikazuje |
+
+Video za web: `ffmpeg -i video.mp4 -an -c:v libx264 -crf 25 -pix_fmt yuv420p -movflags +faststart hero.mp4`
+i `ffmpeg -i hero.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 38 hero.webm`.
+
 ## SEO
 
 - Naslov i opis su napisani za pretragu "vikendica Vlašić".

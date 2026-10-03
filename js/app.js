@@ -76,11 +76,16 @@
       return '<a href="#' + k + '">' + esc(t('nav.' + k)) + '</a>';
     }).join('');
     return '<div class="topbar-in">' +
-      '<a class="brand" href="#top" aria-label="' + esc(L(D.title)) + '"><span class="brand-mark" aria-hidden="true">' + brandMark() + '</span><span class="brand-name">' + esc(D.name) + '</span></a>' +
+      '<a class="brand' + (D.brandLogo ? ' has-logo' : '') + '" href="#top" aria-label="' + esc(L(D.title)) + '"><span class="brand-mark" aria-hidden="true">' + brandMark() + '</span><span class="brand-name">' + esc(D.name) + '</span></a>' +
       '<nav class="topnav" aria-label="Navigacija">' + nav + '</nav>' +
       '<div class="toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div></div>';
   }
-  function brandMark() {
+  function brandMark(onDark) {
+    /* D.brandLogo: { light: 'logo za tamnu pozadinu (bijeli)', dark: 'logo za svijetlu pozadinu' } */
+    if (D.brandLogo) {
+      if (onDark) return '<img class="brand-logo" src="' + esc(D.brandLogo.light) + '" alt="">';
+      return '<img class="brand-logo brand-logo-light" src="' + esc(D.brandLogo.light) + '" alt=""><img class="brand-logo brand-logo-dark" src="' + esc(D.brandLogo.dark) + '" alt="">';
+    }
     return '<svg viewBox="0 0 32 32"><path d="M3 26L16 6l13 20z" fill="currentColor"/><path d="M11 26l5-8 5 8z" fill="var(--bg)"/></svg>';
   }
   function seasonToggle() {
@@ -121,9 +126,13 @@
       '<p class="badge reveal">' + ic(season === 'winter' ? 'snow' : 'sun') + esc(L(D.badge) || t('heroBadge')) + ' · ' + esc(D.place) + '</p>' +
       heroTitle() +
       '<p class="hero-tag reveal">' + esc(L(D.tagline)) + '</p></div>' +
+      (D.heroChips && D.heroChips.length ? '<ul class="hero-chips reveal" aria-label="' + esc(t('factsTitle')) + '">' + D.heroChips.map(function (c, i) {
+        return '<li style="--d:' + i + '">' + ic(c.icon) + esc(L(c.label)) + '</li>';
+      }).join('') + '</ul>' : '') +
       '<div class="hero-ctas reveal"><a class="btn btn-primary" href="#calc">' + ic('calendar') + esc(t(P ? 'heroCta' : 'heroCtaInquiry')) + '</a>' +
       '<a class="btn btn-ghost" href="#gallery">' + esc(t('heroSecondary')) + '</a></div>' +
-      '</div>';
+      '</div>' +
+      '<a class="scroll-cue" href="#main" aria-label="' + esc(t('scrollMore')) + '"><span>' + esc(t('scrollMore')) + '</span>' + ic('down') + '</a>';
   }
 
   function facts() {
@@ -189,12 +198,26 @@
     return section('prices', null, t('pricesTitle'), t('pricesLead'), body);
   }
 
+  /* padajući meni (umjesto sistemskog <select>, da izgleda lijepo svuda) */
+  function dropdown(id, label, opts, value) {
+    var cur = opts.filter(function (o) { return String(o.v) === String(value); })[0] || opts[0];
+    return '<div class="field"><span id="' + id + '-l">' + esc(label) + '</span><div class="dd" id="' + id + '" data-value="' + esc(cur.v) + '">' +
+      '<button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="' + id + '-l ' + id + '-v"><span class="dd-val" id="' + id + '-v">' + esc(cur.t) + '</span>' + ic('down', 'dd-chev') + '</button>' +
+      '<ul class="pop dd-list" role="listbox" aria-labelledby="' + id + '-l" hidden>' +
+      opts.map(function (o) { return '<li role="option" tabindex="-1" data-v="' + esc(o.v) + '" aria-selected="' + (String(o.v) === String(cur.v)) + '">' + esc(o.t) + ic('check', 'dd-check') + '</li>'; }).join('') +
+      '</ul></div></div>';
+  }
+  function guestOpts() {
+    var o = []; for (var g = 1; g <= MAX_GUESTS; g++) o.push({ v: g, t: plural(t('guestsN'), g) });
+    return o;
+  }
+  function roomOpts() {
+    return [{ v: '', t: t('anyRoom') }].concat((D.rooms || []).map(function (r, i) { return { v: i, t: L(r.title) }; }));
+  }
+  function dateLabel(v) { return v ? fmtDate(parseDate(v)) : t('pickDate'); }
+
   function calc() {
-    var today = iso(new Date());
-    var guests = '';
-    for (var g = 1; g <= MAX_GUESTS; g++) guests += '<option value="' + g + '"' + (g === form.g ? ' selected' : '') + '>' + g + '</option>';
-    var roomSel = D.rooms && D.rooms.length ? '<label class="field"><span>' + esc(t('roomType')) + '</span><select id="f-r"><option value="">' + esc(t('anyRoom')) + '</option>' +
-      D.rooms.map(function (r, i) { return '<option value="' + i + '"' + (String(i) === form.room ? ' selected' : '') + '>' + esc(L(r.title)) + '</option>'; }).join('') + '</select></label>' : '';
+    var roomSel = D.rooms && D.rooms.length ? dropdown('dd-r', t('roomType'), roomOpts(), form.room) : '';
     var out = P
       ? '<div class="calc-out" aria-live="polite"><p class="calc-line" id="calc-line">' + esc(t('calcHint')) + '</p>' +
         '<p class="calc-total"><span>' + esc(t('total')) + '</span><b><span id="calc-total">0</span> ' + esc(P.currency) + '</b></p>' +
@@ -204,15 +227,24 @@
         '<p class="calc-dep">' + esc(t('onRequestNote')) + '</p></div>';
     var body = '<div class="calc-grid">' +
       '<form class="calc-card reveal" id="calc-form" novalidate>' +
-      '<div class="field-row"><label class="field"><span>' + esc(t('arrival')) + '</span><input type="date" id="f-a" min="' + today + '" value="' + esc(form.a) + '" required></label>' +
-      '<label class="field"><span>' + esc(t('departure')) + '</span><input type="date" id="f-d" min="' + today + '" value="' + esc(form.d) + '" required></label></div>' +
-      '<label class="field"><span>' + esc(t('guests')) + '</span><select id="f-g">' + guests + '</select></label>' +
+      '<div class="field field-dates"><span>' + esc(t('dates')) + ' <i class="req" aria-hidden="true">*</i></span>' +
+      '<div class="dates" id="dates">' +
+      '<button type="button" class="date-btn" data-cal="a" aria-haspopup="dialog" aria-expanded="false">' + ic('calendar') + '<span><small>' + esc(t('arrival')) + '</small><b id="lbl-a">' + esc(dateLabel(form.a)) + '</b></span></button>' +
+      '<button type="button" class="date-btn" data-cal="d" aria-haspopup="dialog" aria-expanded="false">' + ic('calendar') + '<span><small>' + esc(t('departure')) + '</small><b id="lbl-d">' + esc(dateLabel(form.d)) + '</b></span></button>' +
+      '</div><input type="hidden" id="f-a" value="' + esc(form.a) + '"><input type="hidden" id="f-d" value="' + esc(form.d) + '">' +
+      '<div class="pop cal-pop" id="cal" role="dialog" aria-label="' + esc(t('dates')) + '" hidden></div></div>' +
+      dropdown('dd-g', t('guests'), guestOpts(), form.g) +
       roomSel + out +
       '</form>' +
       '<form class="inq-card reveal" id="inq-form" novalidate><h3>' + esc(t('inquiryTitle')) + '</h3><p class="muted">' + esc(t('inquiryLead')) + '</p>' +
-      '<label class="field"><span>' + esc(t('name')) + '</span><input type="text" id="f-n" autocomplete="name" value="' + esc(form.name) + '"></label>' +
-      '<label class="field"><span>' + esc(t('phone')) + '</span><input type="tel" id="f-p" autocomplete="tel" inputmode="tel" value="' + esc(form.phone) + '"></label>' +
+      '<label class="field"><span>' + esc(t('name')) + ' <i class="req" aria-hidden="true">*</i></span><input type="text" id="f-n" autocomplete="name" required value="' + esc(form.name) + '"></label>' +
+      '<label class="field"><span>' + esc(t('phone')) + ' <i class="req" aria-hidden="true">*</i></span><input type="tel" id="f-p" autocomplete="tel" inputmode="tel" required value="' + esc(form.phone) + '"></label>' +
       '<label class="field"><span>' + esc(t('message')) + '</span><textarea id="f-m" rows="2">' + esc(form.msg) + '</textarea></label>' +
+      '<div class="need" id="need"><p>' + esc(t('needTitle')) + '</p><ul>' +
+      '<li data-need="dates">' + ic('check') + esc(t('needDatesItem')) + '</li>' +
+      '<li data-need="name">' + ic('check') + esc(t('needNameItem')) + '</li>' +
+      '<li data-need="phone">' + ic('check') + esc(t('needPhoneItem')) + '</li></ul>' +
+      '<p class="need-why">' + esc(t('needWhy')) + '</p></div>' +
       '<p class="form-err" id="inq-err" role="alert"></p>' +
       '<div class="inq-btns"><a class="btn btn-viber" id="send-viber" href="#">' + ic('viber') + esc(t('sendViber')) + '</a>' +
       '<a class="btn btn-wa" id="send-wa" href="#" target="_blank" rel="noopener">' + ic('whatsapp') + esc(t('sendWhatsapp')) + '</a></div>' +
@@ -289,10 +321,15 @@
   }
 
   function footer() {
-    return '<div class="wrap foot-in"><p class="foot-brand">' + brandMark() + esc(L(D.title)) + '</p>' +
+    return '<div class="wrap foot-in"><p class="foot-brand">' + brandMark(true) + esc(L(D.title)) + '</p>' +
       (D.demo ? '<p class="demo-note">' + esc(L(D.demoNote) || t('demoNote')) + '</p>' : '') +
       (D.credit ? '<p class="credit">' + esc(t('madeBy')) + ': <a href="' + esc(D.credit.url) + '" target="_blank" rel="noopener">' + esc(D.credit.name) + '</a></p>' : '') +
       '<p class="muted small">© ' + new Date().getFullYear() + ' ' + esc(D.name) + '. ' + esc(t('footerRights')) + '</p></div>';
+  }
+
+  function toTop() {
+    return '<a class="to-top" id="to-top" href="#top" aria-label="' + esc(t('toTop')) + '" title="' + esc(t('toTop')) + '">' +
+      '<svg class="to-top-ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22"/><circle cx="24" cy="24" r="22" class="to-top-prog" id="to-top-prog"/></svg>' + ic('up') + '</a>';
   }
 
   function dock() {
@@ -317,6 +354,9 @@
     document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + amenities() + prices() + calc() + location() + activities() + reviews() + faq() + contact();
     document.getElementById('foot').innerHTML = footer();
     document.getElementById('dock').innerHTML = dock();
+    var tt = document.getElementById('to-top-wrap');
+    if (!tt) { tt = document.createElement('div'); tt.id = 'to-top-wrap'; document.body.appendChild(tt); }
+    tt.innerHTML = toTop();
     bindCalc();
     updateCalc(false);
     observeReveal();
@@ -382,37 +422,215 @@
     return { ok: r.ok, text: lines.join('\n') };
   }
 
-  function bindCalc() {
-    var a = document.getElementById('f-a'), d = document.getElementById('f-d'), g = document.getElementById('f-g');
-    a.addEventListener('change', function () {
-      form.a = a.value;
-      if (form.a) {
-        var min = parseDate(form.a); min.setDate(min.getDate() + MIN_NIGHTS);
-        d.min = iso(min);
-        if (!form.d || parseDate(form.d) < min) { form.d = iso(min); d.value = form.d; }
-      }
-      updateCalc(true);
+  /* šta još fali za upit: datumi, ime, telefon */
+  function missing() {
+    var r = compute(), m = [];
+    if (!r.ok) m.push('dates');
+    if (!form.name.trim()) m.push('name');
+    if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 6) m.push('phone');
+    return m;
+  }
+  function updateNeed() {
+    var m = missing(), box = document.getElementById('need');
+    if (!box) return;
+    box.querySelectorAll('[data-need]').forEach(function (li) { li.classList.toggle('ok', m.indexOf(li.getAttribute('data-need')) === -1); });
+    box.classList.toggle('all-ok', !m.length);
+    ['send-viber', 'send-wa'].forEach(function (id) {
+      var b = document.getElementById(id);
+      b.classList.toggle('is-locked', !!m.length);
+      b.setAttribute('aria-disabled', String(!!m.length));
     });
-    d.addEventListener('change', function () { form.d = d.value; updateCalc(true); });
-    g.addEventListener('change', function () { form.g = +g.value; updateCalc(true); });
-    var rs = document.getElementById('f-r');
-    if (rs) rs.addEventListener('change', function () { form.room = rs.value; });
+    if (!m.length) document.getElementById('inq-err').textContent = '';
+  }
+
+  function setDates(a, d) {
+    form.a = a || ''; form.d = d || '';
+    document.getElementById('f-a').value = form.a;
+    document.getElementById('f-d').value = form.d;
+    document.getElementById('lbl-a').textContent = dateLabel(form.a);
+    document.getElementById('lbl-d').textContent = dateLabel(form.d);
+    updateCalc(true);
+    updateNeed();
+  }
+
+  function bindCalc() {
     ['f-n', 'f-p', 'f-m'].forEach(function (id, i) {
-      document.getElementById(id).addEventListener('input', function (e) { form[['name', 'phone', 'msg'][i]] = e.target.value; });
+      document.getElementById(id).addEventListener('input', function (e) { form[['name', 'phone', 'msg'][i]] = e.target.value; updateNeed(); });
     });
     function go(kind, e) {
-      var m = message(), err = document.getElementById('inq-err');
-      if (!m.ok) { e.preventDefault(); err.textContent = t('needDates'); document.getElementById('f-a').focus(); return; }
-      if (!form.name.trim() || !form.phone.trim()) { e.preventDefault(); err.textContent = t('needName'); document.getElementById(form.name.trim() ? 'f-p' : 'f-n').focus(); return; }
+      var m = missing(), err = document.getElementById('inq-err');
+      if (m.length) {
+        e.preventDefault();
+        err.textContent = t(m[0] === 'dates' ? 'needDates' : 'needName');
+        if (m[0] === 'dates') { document.getElementById('dates').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); setTimeout(function () { Cal.open(form.a ? 'd' : 'a'); }, reduced ? 0 : 650); }
+        else document.getElementById(m[0] === 'name' ? 'f-n' : 'f-p').focus();
+        return;
+      }
       err.textContent = '';
-      var c = D.contact;
+      var msg = message(), c = D.contact;
       e.currentTarget.href = kind === 'viber'
-        ? 'viber://chat?number=' + encodeURIComponent(c.viber) + '&draft=' + encodeURIComponent(m.text)
-        : 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent(m.text);
+        ? 'viber://chat?number=' + encodeURIComponent(c.viber) + '&draft=' + encodeURIComponent(msg.text)
+        : 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent(msg.text);
     }
     document.getElementById('send-viber').addEventListener('click', function (e) { go('viber', e); });
     document.getElementById('send-wa').addEventListener('click', function (e) { go('wa', e); });
+    updateNeed();
   }
+
+  /* ---------------- kalendar za datume ---------------- */
+  var Cal = (function () {
+    var month = null, picking = 'a', openEl = null;
+    var MONTHS = {
+      bs: ['januar', 'februar', 'mart', 'april', 'maj', 'juni', 'juli', 'august', 'septembar', 'oktobar', 'novembar', 'decembar'],
+      en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    };
+    var DAYS = { bs: ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] };
+    function today() { return parseDate(iso(new Date())); }
+    function draw() {
+      var el = document.getElementById('cal');
+      var y = month.getFullYear(), mo = month.getMonth();
+      var first = new Date(y, mo, 1), startDow = (first.getDay() + 6) % 7, days = new Date(y, mo + 1, 0).getDate();
+      var td = today(), a = parseDate(form.a), d = parseDate(form.d);
+      var minEnd = a ? new Date(a.getFullYear(), a.getMonth(), a.getDate() + MIN_NIGHTS) : null;
+      var canPrev = new Date(y, mo, 1) > new Date(td.getFullYear(), td.getMonth(), 1);
+      var cells = '';
+      for (var i = 0; i < startDow; i++) cells += '<span></span>';
+      for (var dd = 1; dd <= days; dd++) {
+        var day = new Date(y, mo, dd), v = iso(day);
+        var dis = day < td || (picking === 'd' && a && minEnd && day < minEnd && day > a);
+        var cls = ['cal-day'];
+        if (+day === +td) cls.push('is-today');
+        if (a && +day === +a) cls.push('is-start');
+        if (d && +day === +d) cls.push('is-end');
+        if (a && d && day > a && day < d) cls.push('is-range');
+        cells += '<button type="button" class="' + cls.join(' ') + '" data-day="' + v + '"' + (dis ? ' disabled' : '') + ' aria-label="' + esc(fmtDate(day)) + '">' + dd + '</button>';
+      }
+      var r = compute();
+      el.innerHTML =
+        '<div class="cal-head"><button type="button" class="cal-nav" data-cal-nav="-1"' + (canPrev ? '' : ' disabled') + ' aria-label="‹">' + ic('left') + '</button>' +
+        '<b>' + MONTHS[lang][mo] + ' ' + y + '</b>' +
+        '<button type="button" class="cal-nav" data-cal-nav="1" aria-label="›">' + ic('right') + '</button></div>' +
+        '<p class="cal-hint">' + esc(t(picking === 'a' ? 'pickArrival' : 'pickDeparture')) + '</p>' +
+        '<div class="cal-dow">' + DAYS[lang].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' +
+        '<div class="cal-grid">' + cells + '</div>' +
+        '<div class="cal-foot"><span>' + esc(r.ok ? plural(t('nights'), r.nights) : '') + '</span>' +
+        '<button type="button" class="cal-clear" data-cal-clear>' + esc(t('clear')) + '</button>' +
+        '<button type="button" class="btn btn-small btn-primary" data-cal-done>' + esc(t('done')) + '</button></div>';
+    }
+    function open(which) {
+      var el = document.getElementById('cal');
+      picking = which === 'd' && form.a ? 'd' : 'a';
+      var base = parseDate(picking === 'd' ? (form.d || form.a) : form.a) || today();
+      month = new Date(base.getFullYear(), base.getMonth(), 1);
+      el.hidden = false; openEl = el;
+      document.querySelectorAll('.date-btn').forEach(function (b) { b.setAttribute('aria-expanded', 'true'); b.classList.toggle('is-active', b.getAttribute('data-cal') === picking); });
+      draw();
+      requestAnimationFrame(function () {
+        el.classList.add('open');
+        var f = el.querySelector('.is-start, .is-today, .cal-day:not([disabled])'); if (f) f.focus({ preventScroll: true });
+        el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+      });
+    }
+    function close() {
+      if (!openEl) return;
+      var el = openEl; openEl = null;
+      el.classList.remove('open');
+      document.querySelectorAll('.date-btn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); b.classList.remove('is-active'); });
+      setTimeout(function () { if (!openEl) el.hidden = true; }, reduced ? 0 : 180);
+    }
+    function pick(v) {
+      var day = parseDate(v), a = parseDate(form.a);
+      if (picking === 'a' || !a || day <= a) {
+        setDates(v, '');
+        picking = 'd';
+      } else {
+        setDates(form.a, v);
+        draw();
+        setTimeout(close, reduced ? 0 : 260);
+        return;
+      }
+      document.querySelectorAll('.date-btn').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-cal') === picking); });
+      draw();
+      var nb = document.querySelector('#cal .cal-day:not([disabled]):not(.is-start)');
+      if (nb) nb.focus({ preventScroll: true });
+    }
+    document.addEventListener('click', function (e) {
+      var db = e.target.closest('.date-btn');
+      if (db) { e.preventDefault(); if (openEl && db.classList.contains('is-active')) close(); else open(db.getAttribute('data-cal')); return; }
+      if (!openEl) return;
+      var day = e.target.closest('.cal-day');
+      if (day && !day.disabled) { pick(day.getAttribute('data-day')); return; }
+      var nav = e.target.closest('[data-cal-nav]');
+      if (nav) { month = new Date(month.getFullYear(), month.getMonth() + (+nav.getAttribute('data-cal-nav')), 1); draw(); return; }
+      if (e.target.closest('[data-cal-clear]')) { setDates('', ''); picking = 'a'; draw(); return; }
+      if (e.target.closest('[data-cal-done]')) { close(); return; }
+      if (!e.target.closest('#cal')) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!openEl) return;
+      if (e.key === 'Escape') { close(); var b = document.querySelector('.date-btn[data-cal="' + picking + '"]'); if (b) b.focus(); return; }
+      var f = document.activeElement;
+      if (!f || !f.classList.contains('cal-day')) return;
+      var step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      var all = [].slice.call(openEl.querySelectorAll('.cal-day:not([disabled])')), i = all.indexOf(f);
+      var n = all[i + step];
+      if (n) n.focus();
+    });
+    return { open: open, close: close };
+  })();
+
+  /* ---------------- padajući meniji ---------------- */
+  (function () {
+    var openDd = null;
+    function close(focusBtn) {
+      if (!openDd) return;
+      var dd = openDd; openDd = null;
+      var list = dd.querySelector('.dd-list'), btn = dd.querySelector('.dd-btn');
+      list.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); dd.classList.remove('is-open');
+      setTimeout(function () { if (openDd !== dd) list.hidden = true; }, reduced ? 0 : 160);
+      if (focusBtn) btn.focus();
+    }
+    function open(dd) {
+      if (openDd && openDd !== dd) close(false);
+      openDd = dd;
+      var list = dd.querySelector('.dd-list');
+      list.hidden = false; dd.classList.add('is-open');
+      dd.querySelector('.dd-btn').setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(function () {
+        list.classList.add('open');
+        (list.querySelector('[aria-selected="true"]') || list.querySelector('li')).focus({ preventScroll: true });
+        list.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+      });
+    }
+    function choose(dd, li) {
+      var v = li.getAttribute('data-v');
+      dd.setAttribute('data-value', v);
+      dd.querySelector('.dd-val').textContent = li.textContent;
+      dd.querySelectorAll('li').forEach(function (x) { x.setAttribute('aria-selected', String(x === li)); });
+      if (dd.id === 'dd-g') { form.g = +v; updateCalc(true); }
+      if (dd.id === 'dd-r') form.room = v;
+      close(true);
+    }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.dd-btn');
+      if (btn) { var dd = btn.closest('.dd'); if (openDd === dd) close(false); else open(dd); return; }
+      var li = e.target.closest('.dd-list li');
+      if (li) { choose(li.closest('.dd'), li); return; }
+      if (openDd && !e.target.closest('.dd')) close(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      var btn = e.target.closest && e.target.closest('.dd-btn');
+      if (btn && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); open(btn.closest('.dd')); return; }
+      if (!openDd) return;
+      var items = [].slice.call(openDd.querySelectorAll('li')), i = items.indexOf(document.activeElement);
+      if (e.key === 'Escape' || e.key === 'Tab') { if (e.key === 'Escape') e.preventDefault(); close(e.key === 'Escape'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); (items[i + 1] || items[0]).focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); (items[i - 1] || items[items.length - 1]).focus(); }
+      else if ((e.key === 'Enter' || e.key === ' ') && i !== -1) { e.preventDefault(); choose(openDd, items[i]); }
+    });
+  })();
 
   /* ---------------- galerija (uvećanje + listanje prstom) ---------------- */
   var lb = { i: 0, el: null, last: null };
@@ -544,7 +762,11 @@
     var lgb = e.target.closest('button[data-lang]');
     if (lgb) { setLang(lgb.getAttribute('data-lang')); return; }
     var rb = e.target.closest('[data-room]');
-    if (rb) { form.room = rb.getAttribute('data-room'); var sel = document.getElementById('f-r'); if (sel) sel.value = form.room; }
+    if (rb) {
+      form.room = rb.getAttribute('data-room');
+      var ddr = document.getElementById('dd-r'), opt = ddr && ddr.querySelector('li[data-v="' + form.room + '"]');
+      if (opt) { ddr.setAttribute('data-value', form.room); ddr.querySelector('.dd-val').textContent = opt.textContent; ddr.querySelectorAll('li').forEach(function (x) { x.setAttribute('aria-selected', String(x === opt)); }); }
+    }
     var gb = e.target.closest('.g-btn');
     if (gb) { openLightbox(+gb.getAttribute('data-g')); return; }
     if (e.target.closest('.lb-close')) { closeLb(); return; }
@@ -584,10 +806,23 @@
       var y = window.scrollY;
       root.classList.toggle('scrolled', y > 40);
       root.classList.toggle('past-hero', y > window.innerHeight * 0.6);
+      root.classList.toggle('show-top', y > window.innerHeight * 1.2);
+      var prog = document.getElementById('to-top-prog');
+      if (prog) { var max = document.documentElement.scrollHeight - window.innerHeight; prog.style.strokeDashoffset = String(138.2 * (1 - Math.min(1, y / Math.max(1, max)))); }
       var art = document.querySelector('.hero-art');
       if (art && !reduced && y < window.innerHeight) art.style.transform = 'translateY(' + (y * 0.25) + 'px) scale(1.04)';
     });
   }, { passive: true });
+
+  /* povratak na vrh: glatko, i fokus na početak stranice (pristupačnost) */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('.to-top');
+    if (!a) return;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    var brand = document.querySelector('.brand');
+    if (brand) setTimeout(function () { brand.focus({ preventScroll: true }); }, reduced ? 0 : 600);
+  });
 
   render();
 })();

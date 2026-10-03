@@ -10,8 +10,11 @@ desktopu, na bosanskom i engleskom, sa zimskom i ljetnom verzijom.
 
 - Prvi ekran sa ilustracijom vikendice, pahuljama (zima) ili listićima (ljeto) i prekidačem zima/ljeto.
 - Brze činjenice, galerija (uvećanje, listanje prstom i strelicama), o vikendici, sadržaji.
+- Vlastiti **kalendar** za datume i lijepi padajući meniji (broj osoba, soba).
+- Dugme **"na vrh"** sa krugom koji pokazuje koliko je stranice pređeno.
 - Cijene po sezonama i **kalkulator** koji računa svaku noć po sezoni i doplatu za dodatne osobe.
 - **Upit na Viber ili WhatsApp**: otvara aplikaciju sa već napisanom porukom (datumi, osobe, cijena, ime, telefon).
+  Datumi, ime i telefon su obavezni: dugmad su zaključana dok sve nije popunjeno, uz listu šta još fali.
 - Lokacija sa stilizovanom mapom i "putokazima", šta raditi na Vlašiću, recenzije, pitanja, kontakt.
 - Donja traka na mobitelu: Pozovi, Viber, Provjeri.
 - Pamti izabrani jezik i sezonu. Poštuje "smanji pokrete" (reduced motion), radi tastaturom.
@@ -66,6 +69,8 @@ Sve je opcionalno; ako polje ne postoji, stranica radi kao demo Planinka.
 | `heroVideo`, `heroVideoWebm`, `heroPoster` | video preko cijelog prvog ekrana (MP4 + WebM, slika dok se učitava) |
 | `heroVideoLoop: false` | video se pusti jednom i stane na zadnjem kadru |
 | `heroLogo: { mark, word }` | animirani logo umjesto naslova: znak se otkrije, ime se "ispiše" (bijeli PNG bez pozadine) |
+| `brandLogo: { light, dark }` | pravi logo u zaglavlju (bijeli preko prvog ekrana, tamni kad se skrola) i u footeru |
+| `heroChips: [{ icon, label }]` | red istaknutih stvari na prvom ekranu (npr. doručak, Wi-Fi, parking) |
 | `theme: { bg, accent, ... }` | boje stranice (iste varijable kao u `css/style.css`) |
 | `seasons: false` | bez prekidača zima/ljeto (npr. kad klijent ima samo zimske slike) |
 | `rooms: [...]` | sekcija "Sobe" (slika, naziv, kreveti, broj osoba, opis, dugme "Pitaj za ovu sobu") i izbor sobe u upitu |

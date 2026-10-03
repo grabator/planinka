@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://planinka.pages.dev/sitemap.xml
+Sitemap: https://planinka.grabafaceit.workers.dev/sitemap.xml

@@ -55,7 +55,7 @@ robots.txt, sitemap.xml
    - Galerija: umjesto `{ scene: 'living', ... }` napiši `{ image: 'assets/img/dnevni-boravak.webp', label: {...} }`.
    - Pretvaranje u WebP: npr. `cwebp -q 80 slika.jpg -o slika.webp` ili bilo koji online alat.
 4. **Boje:** po želji promijeni boje u `css/style.css` (dva bloka na vrhu: zima i ljeto).
-5. **index.html:** promijeni naslov, opis, Open Graph tekstove, adresu (`planinka.pages.dev`) i podatke u
+5. **index.html:** promijeni naslov, opis, Open Graph tekstove, adresu (`planinka.grabafaceit.workers.dev`) i podatke u
    bloku `application/ld+json` (ime, telefon, mjesto, cijene).
 6. **Slika za dijeljenje (og.jpg):** 1200 × 630 px, npr. najbolja fotografija vikendice sa imenom.
 7. **robots.txt i sitemap.xml:** zamijeni adresu pravim domenom.

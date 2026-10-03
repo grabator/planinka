@@ -142,6 +142,30 @@ window.VIKENDICA = {
   },
 
   /* --- utisci (u demu izmišljeni) --- */
+  /* vrijeme uživo (open-meteo.com), koordinate Babanovca */
+  weather: { lat: 44.29, lon: 17.65, title: { bs: 'Trenutno na Vlašiću', en: 'Right now on Vlašić' } },
+
+  breakfast: {
+    text: { bs: 'Na upit pripremamo domaći doručak koji vas čeka na stolu kad se probudite. Sve sa okolnih farmi, uz pogled na planinu.', en: 'On request we prepare a homemade breakfast, ready on the table when you wake up. Everything from local farms, with a mountain view.' },
+    items: [
+      { bs: 'Vlašićki sir i kajmak', en: 'Vlašić cheese and kajmak' },
+      { bs: 'Domaća jaja i suhomesnato', en: 'Farm eggs and cured meats' },
+      { bs: 'Topao hljeb, džem i med', en: 'Warm bread, jam and honey' },
+      { bs: 'Kafa, čaj i svježi sok', en: 'Coffee, tea and fresh juice' }
+    ],
+    time: { bs: 'Doplata 10 KM po osobi', en: 'Extra 10 KM per person' }
+  },
+
+  directions: {
+    destination: 'Babanovac, Vlašić',
+    steps: [
+      { icon: 'car', text: { bs: 'Iz Travnika: put prema Turbetu, pa skretanje za Vlašić. Oko 30 minuta do Babanovca.', en: 'From Travnik: head to Turbe, then turn off for Vlašić. About 30 minutes to Babanovac.' } },
+      { icon: 'road', text: { bs: 'Iz Sarajeva oko 1,5 do 2 sata, iz Banje Luke oko 2 sata vožnje.', en: 'About 1.5 to 2 hours from Sarajevo and about 2 hours from Banja Luka.' } },
+      { icon: 'parking', text: { bs: 'Parking za dva auta je u dvorištu vikendice.', en: 'Parking for two cars in the chalet yard.' } }
+    ],
+    tip: { bs: 'Zimi obavezno zimske gume, a lanci u autu dobro dođu. Javite nam se prije polaska ako niste sigurni za stanje puta.', en: 'In winter, winter tyres are a must and snow chains are handy. Call us before you set off if you are unsure about the roads.' }
+  },
+
   reviews: [
     { name: 'Amra i Kenan', from: { bs: 'Sarajevo', en: 'Sarajevo' }, rating: 5, text: { bs: 'Vikendica je još ljepša nego na slikama. Kamin, sauna i tišina, baš ono što nam je trebalo.', en: 'Even more beautiful than in the photos. Fireplace, sauna and silence, exactly what we needed.' } },
     { name: 'Marko', from: { bs: 'Zagreb', en: 'Zagreb' }, rating: 5, text: { bs: 'Pet minuta do staze, a kao da ste sami na planini. Domaćini fantastični.', en: 'Five minutes to the slopes, yet it feels like you have the mountain to yourself. Fantastic hosts.' } },

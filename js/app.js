@@ -18,8 +18,13 @@
 
   var lang = load('planinka-lang') || 'bs';
   if (lang !== 'en') lang = 'bs';
-  var season = load('planinka-season') || autoSeason();
-  var form = { a: '', d: '', g: Math.min(4, D.pricing.maxGuests), name: '', phone: '', msg: '' };
+  /* opcionalni dijelovi: pricing (null = cijene na upit), rooms, seasons: false, heroVideo, heroLogo, theme ... */
+  var P = D.pricing || null;
+  var SEASONS = D.seasons !== false;
+  var MAX_GUESTS = (P && P.maxGuests) || D.maxGuests || 8;
+  var MIN_NIGHTS = (P && P.minNights) || D.minNights || 1;
+  var season = SEASONS ? (load('planinka-season') || autoSeason()) : (D.defaultSeason === 'summer' ? 'summer' : 'winter');
+  var form = { a: '', d: '', g: Math.min(4, MAX_GUESTS), room: '', name: '', phone: '', msg: '' };
 
   function autoSeason() {
     if (D.defaultSeason === 'winter' || D.defaultSeason === 'summer') return D.defaultSeason;
@@ -29,6 +34,8 @@
 
   /* ---------------- pomoćne ---------------- */
   function t(key, vars) {
+    /* D.ui može promijeniti bilo koji tekst interfejsa, npr. ui: { aboutTitle: { bs: 'O nama', en: 'About us' } } */
+    if (D.ui && D.ui[key]) { var o = L(D.ui[key]); return vars ? o.replace(/\{(\w+)\}/g, function (_, k) { return vars[k] != null ? vars[k] : ''; }) : o; }
     var parts = key.split('.'), v = UI[lang];
     for (var i = 0; i < parts.length; i++) v = v && v[parts[i]];
     if (v == null) v = key;
@@ -51,7 +58,7 @@
     return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear() + '.';
   }
   function sceneOrImage(item, cls) {
-    if (item.image) return '<img src="' + esc(item.image) + '" alt="" loading="lazy" decoding="async" class="' + (cls || '') + '">';
+    if (item.image) return '<img src="' + esc(item.image) + '" alt="' + esc(L(item.label)) + '" loading="lazy" decoding="async" class="' + (cls || '') + '">';
     return SC[item.scene] ? SC[item.scene]() : '';
   }
   function section(id, eyebrow, title, lead, body, cls) {
@@ -64,13 +71,14 @@
 
   /* ---------------- dijelovi stranice ---------------- */
   function topbar() {
-    var nav = ['gallery', 'about', 'prices', 'location', 'contact'].map(function (k) {
+    var keys = ['gallery'].concat(D.rooms && D.rooms.length ? ['rooms'] : [], ['about'], P ? ['prices'] : [], ['location', 'contact']);
+    var nav = keys.map(function (k) {
       return '<a href="#' + k + '">' + esc(t('nav.' + k)) + '</a>';
     }).join('');
     return '<div class="topbar-in">' +
       '<a class="brand" href="#top" aria-label="' + esc(L(D.title)) + '"><span class="brand-mark" aria-hidden="true">' + brandMark() + '</span><span class="brand-name">' + esc(D.name) + '</span></a>' +
       '<nav class="topnav" aria-label="Navigacija">' + nav + '</nav>' +
-      '<div class="toggles">' + seasonToggle() + langToggle() + '</div></div>';
+      '<div class="toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div></div>';
   }
   function brandMark() {
     return '<svg viewBox="0 0 32 32"><path d="M3 26L16 6l13 20z" fill="currentColor"/><path d="M11 26l5-8 5 8z" fill="var(--bg)"/></svg>';
@@ -87,16 +95,33 @@
       '<span class="seg-thumb" aria-hidden="true"></span></div>';
   }
 
+  function heroArt() {
+    if (D.heroVideo) {
+      return '<video class="hero-img hero-video" autoplay muted playsinline preload="auto"' + (D.heroVideoLoop === false ? '' : ' loop') + (D.heroPoster ? ' poster="' + esc(D.heroPoster) + '"' : '') + ' aria-hidden="true">' +
+        '<source src="' + esc(D.heroVideo) + '" type="video/mp4">' +
+        (D.heroVideoWebm ? '<source src="' + esc(D.heroVideoWebm) + '" type="video/webm">' : '') + '</video>';
+    }
+    return D.heroImage ? '<img src="' + esc(D.heroImage) + '" alt="" class="hero-img">' : SC.exterior();
+  }
+  function heroTitle() {
+    var lg = D.heroLogo;
+    if (lg) {
+      /* animirani logo: znak se otkrije iz kruga, ime se "ispiše" slijeva nadesno */
+      return '<h1 class="hero-logo"><span class="sr-only">' + esc(L(D.title)) + '</span>' +
+        (lg.mark ? '<img class="hl-mark" src="' + esc(lg.mark) + '" alt="" aria-hidden="true">' : '') +
+        '<img class="hl-word" src="' + esc(lg.word) + '" alt="" aria-hidden="true"></h1>';
+    }
+    return '<h1 class="reveal"><span class="h1-small">' + esc(L(D.kind)) + '</span>' + esc(D.name) + '<span class="h1-place">' + esc(D.place) + '</span></h1>';
+  }
   function hero() {
-    var ext = D.heroImage ? '<img src="' + esc(D.heroImage) + '" alt="" class="hero-img">' : SC.exterior();
-    return '<div class="hero-art">' + ext + '</div>' +
+    return '<div class="hero-art">' + heroArt() + '</div>' +
       '<canvas class="fx" aria-hidden="true"></canvas>' +
       '<div class="hero-shade" aria-hidden="true"></div>' +
       '<div class="wrap hero-in"><div class="hero-top">' +
-      '<p class="badge reveal">' + ic(season === 'winter' ? 'snow' : 'sun') + esc(t('heroBadge')) + ' · ' + esc(D.place) + '</p>' +
-      '<h1 class="reveal"><span class="h1-small">' + esc(L(D.kind)) + '</span>' + esc(D.name) + '<span class="h1-place">' + esc(D.place) + '</span></h1>' +
+      '<p class="badge reveal">' + ic(season === 'winter' ? 'snow' : 'sun') + esc(L(D.badge) || t('heroBadge')) + ' · ' + esc(D.place) + '</p>' +
+      heroTitle() +
       '<p class="hero-tag reveal">' + esc(L(D.tagline)) + '</p></div>' +
-      '<div class="hero-ctas reveal"><a class="btn btn-primary" href="#calc">' + ic('calendar') + esc(t('heroCta')) + '</a>' +
+      '<div class="hero-ctas reveal"><a class="btn btn-primary" href="#calc">' + ic('calendar') + esc(t(P ? 'heroCta' : 'heroCtaInquiry')) + '</a>' +
       '<a class="btn btn-ghost" href="#gallery">' + esc(t('heroSecondary')) + '</a></div>' +
       '</div>';
   }
@@ -109,8 +134,12 @@
   }
 
   function gallery() {
+    /* zadnja slika popuni ostatak reda (mobitel: 2 kolone, desktop: 3 kolone, prva slika je velika) */
+    var n = D.gallery.length;
+    var spanM = 2 - ((2 + n - 2) % 2), spanD = 3 - ((4 + n - 2) % 3);
     var items = D.gallery.map(function (g, i) {
-      return '<li class="g-item reveal' + (i === 0 ? ' g-wide' : '') + '" style="--d:' + i + '">' +
+      var last = i === n - 1 && i > 0;
+      return '<li class="g-item reveal' + (i === 0 ? ' g-wide' : '') + (last ? ' g-last' + (spanM === 2 ? ' g-pano-m' : '') + (spanD === 3 ? ' g-pano-d' : '') : '') + '" style="--d:' + i + (last ? ';--span-m:' + spanM + ';--span-d:' + spanD : '') + '">' +
         '<button type="button" class="g-btn" data-g="' + i + '" aria-label="' + esc(t('galleryOpen')) + ': ' + esc(L(g.label)) + '">' +
         '<span class="g-art">' + sceneOrImage(g) + '</span><span class="g-cap">' + esc(L(g.label)) + '</span></button></li>';
     }).join('');
@@ -120,8 +149,21 @@
   function about() {
     var body = '<div class="about-grid"><div class="about-text">' + L(D.about).map(function (p, i) {
       return '<p class="reveal" style="--d:' + i + '">' + esc(p) + '</p>';
-    }).join('') + '</div><div class="about-art reveal"><div class="frame">' + SC.living() + '</div><div class="frame frame-2">' + SC.view() + '</div></div></div>';
+    }).join('') + '</div><div class="about-art reveal"><div class="frame">' + (D.aboutImages ? sceneOrImage(D.aboutImages[0]) : SC.living()) + '</div><div class="frame frame-2">' + (D.aboutImages ? sceneOrImage(D.aboutImages[1]) : SC.view()) + '</div></div></div>';
     return section('about', t('aboutEyebrow'), t('aboutTitle'), null, body);
+  }
+
+  function rooms() {
+    if (!D.rooms || !D.rooms.length) return '';
+    var body = '<ul class="rooms">' + D.rooms.map(function (r, i) {
+      return '<li class="room reveal" style="--d:' + i + '">' +
+        '<div class="room-art">' + sceneOrImage(r) + '</div>' +
+        '<div class="room-body"><h3>' + esc(L(r.title)) + '</h3>' +
+        '<p class="room-beds">' + ic('bed') + esc(L(r.beds)) + (r.guests ? ' · ' + ic('guests') + esc(t('upToGuests', { n: r.guests })) : '') + '</p>' +
+        (r.text ? '<p class="room-text">' + esc(L(r.text)) + '</p>' : '') +
+        '<a class="btn btn-small btn-outline" href="#calc" data-room="' + i + '">' + esc(t('askRoom')) + ic('arrow') + '</a></div></li>';
+    }).join('') + '</ul>';
+    return section('rooms', null, t('roomsTitle'), L(D.roomsLead) || t('roomsLead'), body);
   }
 
   function amenities() {
@@ -132,7 +174,8 @@
   }
 
   function prices() {
-    var p = D.pricing;
+    if (!P) return '';
+    var p = P;
     function card(kind) {
       return '<div class="price-card price-' + kind + ' reveal">' +
         '<div class="price-top">' + ic(kind === 'winter' ? 'snow' : 'sun') + '<div><h3>' + esc(t(kind + 'Season')) + '</h3><p>' + esc(t(kind + 'Months')) + '</p></div></div>' +
@@ -147,18 +190,24 @@
   }
 
   function calc() {
-    var p = D.pricing;
     var today = iso(new Date());
     var guests = '';
-    for (var g = 1; g <= p.maxGuests; g++) guests += '<option value="' + g + '"' + (g === form.g ? ' selected' : '') + '>' + g + '</option>';
+    for (var g = 1; g <= MAX_GUESTS; g++) guests += '<option value="' + g + '"' + (g === form.g ? ' selected' : '') + '>' + g + '</option>';
+    var roomSel = D.rooms && D.rooms.length ? '<label class="field"><span>' + esc(t('roomType')) + '</span><select id="f-r"><option value="">' + esc(t('anyRoom')) + '</option>' +
+      D.rooms.map(function (r, i) { return '<option value="' + i + '"' + (String(i) === form.room ? ' selected' : '') + '>' + esc(L(r.title)) + '</option>'; }).join('') + '</select></label>' : '';
+    var out = P
+      ? '<div class="calc-out" aria-live="polite"><p class="calc-line" id="calc-line">' + esc(t('calcHint')) + '</p>' +
+        '<p class="calc-total"><span>' + esc(t('total')) + '</span><b><span id="calc-total">0</span> ' + esc(P.currency) + '</b></p>' +
+        '<p class="calc-dep" id="calc-dep"></p></div>'
+      : '<div class="calc-out" aria-live="polite"><p class="calc-line" id="calc-line">' + esc(t('calcHint')) + '</p>' +
+        '<p class="calc-total calc-onreq"><span>' + esc(t('priceLabel')) + '</span><b>' + esc(t('onRequest')) + '</b></p>' +
+        '<p class="calc-dep">' + esc(t('onRequestNote')) + '</p></div>';
     var body = '<div class="calc-grid">' +
       '<form class="calc-card reveal" id="calc-form" novalidate>' +
       '<div class="field-row"><label class="field"><span>' + esc(t('arrival')) + '</span><input type="date" id="f-a" min="' + today + '" value="' + esc(form.a) + '" required></label>' +
       '<label class="field"><span>' + esc(t('departure')) + '</span><input type="date" id="f-d" min="' + today + '" value="' + esc(form.d) + '" required></label></div>' +
       '<label class="field"><span>' + esc(t('guests')) + '</span><select id="f-g">' + guests + '</select></label>' +
-      '<div class="calc-out" aria-live="polite"><p class="calc-line" id="calc-line">' + esc(t('calcHint')) + '</p>' +
-      '<p class="calc-total"><span>' + esc(t('total')) + '</span><b><span id="calc-total">0</span> ' + esc(p.currency) + '</b></p>' +
-      '<p class="calc-dep" id="calc-dep"></p></div>' +
+      roomSel + out +
       '</form>' +
       '<form class="inq-card reveal" id="inq-form" novalidate><h3>' + esc(t('inquiryTitle')) + '</h3><p class="muted">' + esc(t('inquiryLead')) + '</p>' +
       '<label class="field"><span>' + esc(t('name')) + '</span><input type="text" id="f-n" autocomplete="name" value="' + esc(form.name) + '"></label>' +
@@ -168,15 +217,15 @@
       '<div class="inq-btns"><a class="btn btn-viber" id="send-viber" href="#">' + ic('viber') + esc(t('sendViber')) + '</a>' +
       '<a class="btn btn-wa" id="send-wa" href="#" target="_blank" rel="noopener">' + ic('whatsapp') + esc(t('sendWhatsapp')) + '</a></div>' +
       '<p class="muted small">' + esc(t('inquiryNote')) + '</p></form></div>';
-    return section('calc', null, t('calcTitle'), t('calcLead'), body, 'sec-alt');
+    return section('calc', null, t(P ? 'calcTitle' : 'datesTitle'), t(P ? 'calcLead' : 'datesLead'), body, 'sec-alt');
   }
 
   function location() {
-    var signs = D.distances.map(function (d, i) {
+    var signs = (D.distances || []).map(function (d, i) {
       return '<li class="sign reveal" style="--d:' + i + '">' + ic(d.icon) + '<span class="sign-place">' + esc(L(d.place)) + '</span><span class="sign-time">' + esc(L(d.time)) + '</span></li>';
     }).join('');
-    var map = '<div class="map reveal">' + mapSvg() + '<a class="btn btn-small map-btn" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(D.mapQuery) + '" target="_blank" rel="noopener">' + ic('pin') + esc(t('openMaps')) + '</a></div>';
-    return section('location', null, t('locationTitle'), t('locationLead'), '<div class="loc-grid">' + map + '<ul class="signs">' + signs + '</ul></div>');
+    var map = '<div class="map reveal">' + (D.locationImage ? '<img src="' + esc(D.locationImage) + '" alt="' + esc(t('locationTitle')) + '" loading="lazy" class="map-img">' : mapSvg()) + '<a class="btn btn-small map-btn" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(D.mapQuery) + '" target="_blank" rel="noopener">' + ic('pin') + esc(t('openMaps')) + '</a></div>';
+    return section('location', null, t('locationTitle'), L(D.locationLead) || t('locationLead'), '<div class="loc-grid">' + map + (signs ? '<ul class="signs">' + signs + '</ul>' : '') + '</div>');
   }
   function mapSvg() {
     return '<svg viewBox="0 0 600 420" class="map-svg" aria-hidden="true">' +
@@ -199,6 +248,7 @@
       }).join('');
     }
     var A = D.activities;
+    if (!A) return '';
     var body = '<div class="act-cols"><div class="act-col act-winter"><h3 class="act-h">' + ic('snow') + esc(t('doWinter')) + '</h3><ul>' + list(A.winter) + '</ul></div>' +
       '<div class="act-col act-summer"><h3 class="act-h">' + ic('sun') + esc(t('doSummer')) + '</h3><ul>' + list(A.summer) + '</ul></div></div>' +
       '<div class="food reveal">' + ic('cheese') + '<div><h3>' + esc(L(A.food.title)) + '</h3><p>' + esc(L(A.food.text)) + '</p></div></div>';
@@ -206,6 +256,7 @@
   }
 
   function reviews() {
+    if (!D.reviews || !D.reviews.length) return '';
     var body = '<ul class="reviews">' + D.reviews.map(function (r, i) {
       var stars = '';
       for (var s = 0; s < 5; s++) stars += '<span class="' + (s < r.rating ? 'on' : '') + '">' + ic('star') + '</span>';
@@ -216,6 +267,7 @@
   }
 
   function faq() {
+    if (!D.faq || !D.faq.length) return '';
     var body = '<div class="faq">' + D.faq.map(function (f, i) {
       return '<details class="faq-i reveal" style="--d:' + i + '"><summary>' + esc(L(f.q)) + '<span class="faq-plus" aria-hidden="true">' + ic('plus') + '</span></summary><div class="faq-a"><p>' + esc(L(f.a)) + '</p></div></details>';
     }).join('') + '</div>';
@@ -230,7 +282,7 @@
       ['whatsapp', t('whatsapp'), 'https://wa.me/' + c.whatsapp, c.phone],
       ['mail', t('email'), 'mailto:' + c.email, c.email],
       ['insta', t('instagram'), 'https://instagram.com/' + c.instagram, '@' + c.instagram]
-    ].map(function (l, i) {
+    ].filter(function (l) { return l[3] && !/undefined/.test(l[2]); }).map(function (l, i) {
       return '<li class="reveal" style="--d:' + i + '"><a class="contact-card" href="' + esc(l[2]) + '"' + (/^https/.test(l[2]) ? ' target="_blank" rel="noopener"' : '') + '>' + ic(l[0]) + '<span><b>' + esc(l[1]) + '</b><small>' + esc(l[3]) + '</small></span></a></li>';
     }).join('');
     return section('contact', null, t('contactTitle'), t('contactLead'), '<ul class="contact-grid">' + links + '</ul>');
@@ -238,7 +290,7 @@
 
   function footer() {
     return '<div class="wrap foot-in"><p class="foot-brand">' + brandMark() + esc(L(D.title)) + '</p>' +
-      (D.demo ? '<p class="demo-note">' + esc(t('demoNote')) + '</p>' : '') +
+      (D.demo ? '<p class="demo-note">' + esc(L(D.demoNote) || t('demoNote')) + '</p>' : '') +
       (D.credit ? '<p class="credit">' + esc(t('madeBy')) + ': <a href="' + esc(D.credit.url) + '" target="_blank" rel="noopener">' + esc(D.credit.name) + '</a></p>' : '') +
       '<p class="muted small">© ' + new Date().getFullYear() + ' ' + esc(D.name) + '. ' + esc(t('footerRights')) + '</p></div>';
   }
@@ -247,20 +299,22 @@
     var c = D.contact;
     return '<a class="dock-btn" href="tel:' + esc(c.phone.replace(/\s/g, '')) + '">' + ic('phone') + esc(t('call')) + '</a>' +
       '<a class="dock-btn dock-viber" href="viber://chat?number=' + encodeURIComponent(c.viber) + '">' + ic('viber') + esc(t('viber')) + '</a>' +
-      '<a class="dock-btn dock-cta" href="#calc">' + ic('calendar') + '<span>' + esc(t('heroCta').split(' ')[0]) + '</span></a>';
+      '<a class="dock-btn dock-cta" href="#calc">' + ic('calendar') + '<span>' + esc(t('dockCta')) + '</span></a>';
   }
 
   /* ---------------- crtanje ---------------- */
   function render() {
     root.lang = lang;
     root.setAttribute('data-season', season);
+    root.classList.toggle('no-seasons', !SEASONS);
+    if (D.theme) Object.keys(D.theme).forEach(function (k) { root.style.setProperty('--' + k, D.theme[k]); });
     document.title = L(D.title) + ' | ' + L(D.tagline);
     var md = document.querySelector('meta[name="description"]');
     if (md) md.setAttribute('content', L(D.tagline));
     document.querySelector('.skip').textContent = t('skip');
     document.getElementById('topbar').innerHTML = topbar();
     document.getElementById('top').innerHTML = hero();
-    document.getElementById('main').innerHTML = facts() + gallery() + about() + amenities() + prices() + calc() + location() + activities() + reviews() + faq() + contact();
+    document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + amenities() + prices() + calc() + location() + activities() + reviews() + faq() + contact();
     document.getElementById('foot').innerHTML = footer();
     document.getElementById('dock').innerHTML = dock();
     bindCalc();
@@ -271,13 +325,14 @@
 
   /* ---------------- kalkulator i upit ---------------- */
   function compute() {
-    var p = D.pricing, a = parseDate(form.a), d = parseDate(form.d), g = +form.g;
+    var p = P, a = parseDate(form.a), d = parseDate(form.d), g = +form.g;
     if (!a || !d) return { ok: false, msg: t('calcHint') };
     var today = parseDate(iso(new Date()));
     if (a < today) return { ok: false, msg: t('errPast') };
     if (d <= a) return { ok: false, msg: t('errOrder') };
     var nights = Math.round((d - a) / 86400000);
-    if (nights < p.minNights) return { ok: false, msg: t('errMin', { n: p.minNights }) };
+    if (nights < MIN_NIGHTS) return { ok: false, msg: t('errMin', { n: MIN_NIGHTS }) };
+    if (!p) return { ok: true, nights: nights, a: a, d: d, g: g, line: plural(t('nights'), nights) + ' · ' + fmtDate(a) + ' – ' + fmtDate(d) };
     var sum = 0, w = 0, s = 0;
     for (var i = 0; i < nights; i++) {
       var day = new Date(a.getFullYear(), a.getMonth(), a.getDate() + i);
@@ -298,8 +353,9 @@
     if (!line) return;
     line.textContent = r.ok ? r.line : r.msg;
     line.classList.toggle('is-err', !r.ok && !!(form.a && form.d));
+    if (!P) return;
     var target = r.ok ? r.total : 0;
-    dep.textContent = r.ok ? t('deposit', { p: D.pricing.depositPercent }) + ': ' + money(r.total * D.pricing.depositPercent / 100) + ' ' + D.pricing.currency : '';
+    dep.textContent = r.ok ? t('deposit', { p: P.depositPercent }) + ': ' + money(r.total * P.depositPercent / 100) + ' ' + P.currency : '';
     cancelAnimationFrame(anim);
     if (!animate || reduced) { shown = target; tot.textContent = money(target); return; }
     var from = shown, t0 = performance.now();
@@ -318,8 +374,9 @@
     if (r.ok) {
       lines.push(t('msgDates', { a: fmtDate(r.a), d: fmtDate(r.d), nights: plural(t('nights'), r.nights) }));
       lines.push(t('msgGuests', { g: r.g }));
-      lines.push(t('msgTotal', { t: money(r.total), c: D.pricing.currency }));
+      if (P) lines.push(t('msgTotal', { t: money(r.total), c: P.currency }));
     }
+    if (form.room !== '' && D.rooms && D.rooms[+form.room]) lines.push(t('msgRoom', { r: L(D.rooms[+form.room].title) }));
     if (form.name || form.phone) lines.push(t('msgFrom', { n: form.name, p: form.phone }));
     if (form.msg) lines.push(form.msg);
     return { ok: r.ok, text: lines.join('\n') };
@@ -330,7 +387,7 @@
     a.addEventListener('change', function () {
       form.a = a.value;
       if (form.a) {
-        var min = parseDate(form.a); min.setDate(min.getDate() + D.pricing.minNights);
+        var min = parseDate(form.a); min.setDate(min.getDate() + MIN_NIGHTS);
         d.min = iso(min);
         if (!form.d || parseDate(form.d) < min) { form.d = iso(min); d.value = form.d; }
       }
@@ -338,6 +395,8 @@
     });
     d.addEventListener('change', function () { form.d = d.value; updateCalc(true); });
     g.addEventListener('change', function () { form.g = +g.value; updateCalc(true); });
+    var rs = document.getElementById('f-r');
+    if (rs) rs.addEventListener('change', function () { form.room = rs.value; });
     ['f-n', 'f-p', 'f-m'].forEach(function (id, i) {
       document.getElementById(id).addEventListener('input', function (e) { form[['name', 'phone', 'msg'][i]] = e.target.value; });
     });
@@ -484,6 +543,8 @@
     if (b) { setSeason(b.getAttribute('data-season')); return; }
     var lgb = e.target.closest('button[data-lang]');
     if (lgb) { setLang(lgb.getAttribute('data-lang')); return; }
+    var rb = e.target.closest('[data-room]');
+    if (rb) { form.room = rb.getAttribute('data-room'); var sel = document.getElementById('f-r'); if (sel) sel.value = form.room; }
     var gb = e.target.closest('.g-btn');
     if (gb) { openLightbox(+gb.getAttribute('data-g')); return; }
     if (e.target.closest('.lb-close')) { closeLb(); return; }

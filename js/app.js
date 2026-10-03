@@ -182,6 +182,36 @@
     return section('amenities', null, t('amenitiesTitle'), t('amenitiesLead'), body, 'sec-alt');
   }
 
+  /* doručak (opcionalno): D.breakfast = { title, text, items: [{bs,en}], image | scene, note } */
+  function breakfast() {
+    var B = D.breakfast;
+    if (!B) return '';
+    var body = '<div class="bf-grid"><div class="bf-art reveal">' + sceneOrImage(B.image ? B : { scene: B.scene || 'breakfast' }) + '</div>' +
+      '<div class="bf-text reveal">' + (B.text ? '<p class="bf-lead">' + esc(L(B.text)) + '</p>' : '') +
+      (B.items ? '<ul class="bf-items">' + B.items.map(function (x, i) { return '<li style="--d:' + i + '">' + ic('check') + esc(L(x)) + '</li>'; }).join('') + '</ul>' : '') +
+      (B.time ? '<p class="bf-time">' + ic('coffee') + esc(L(B.time)) + '</p>' : '') +
+      (B.note ? '<p class="muted small">' + esc(L(B.note)) + '</p>' : '') + '</div></div>';
+    return section('breakfast', t('breakfastEyebrow'), L(B.title) || t('breakfastTitle'), null, body, 'sec-alt');
+  }
+
+  /* Instagram (opcionalno): D.instagramFeed = { images: [{ image, label }] } + D.contact.instagram */
+  function instagram() {
+    var F = D.instagramFeed, h = D.contact && D.contact.instagram;
+    if (!F || !h) return '';
+    var url = 'https://instagram.com/' + h;
+    var body = '<ul class="ig-grid">' + F.images.map(function (g, i) {
+      return '<li class="reveal" style="--d:' + i + '"><a href="' + esc(url) + '" target="_blank" rel="noopener" aria-label="Instagram: ' + esc(L(g.label)) + '">' + sceneOrImage(g) + '<span class="ig-hover">' + ic('insta') + '</span></a></li>';
+    }).join('') + '</ul>' +
+      '<p class="center ig-cta reveal"><a class="btn btn-primary" href="' + esc(url) + '" target="_blank" rel="noopener">' + ic('insta') + esc(t('igFollow', { h: '@' + h })) + '</a></p>';
+    return section('instagram', t('igEyebrow'), t('igTitle'), t('igLead'), body);
+  }
+
+  /* vrijeme uživo (opcionalno): D.weather = { lat, lon } - podaci sa open-meteo.com (besplatno, bez ključa) */
+  function weatherBox() {
+    if (!D.weather) return '';
+    return '<div class="wx reveal" id="wx" aria-live="polite" hidden></div>';
+  }
+
   function prices() {
     if (!P) return '';
     var p = P;
@@ -257,7 +287,19 @@
       return '<li class="sign reveal" style="--d:' + i + '">' + ic(d.icon) + '<span class="sign-place">' + esc(L(d.place)) + '</span><span class="sign-time">' + esc(L(d.time)) + '</span></li>';
     }).join('');
     var map = '<div class="map reveal">' + (D.locationImage ? '<img src="' + esc(D.locationImage) + '" alt="' + esc(t('locationTitle')) + '" loading="lazy" class="map-img">' : mapSvg()) + '<a class="btn btn-small map-btn" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(D.mapQuery) + '" target="_blank" rel="noopener">' + ic('pin') + esc(t('openMaps')) + '</a></div>';
-    return section('location', null, t('locationTitle'), L(D.locationLead) || t('locationLead'), '<div class="loc-grid">' + map + (signs ? '<ul class="signs">' + signs + '</ul>' : '') + '</div>');
+    return section('location', null, t('locationTitle'), L(D.locationLead) || t('locationLead'), '<div class="loc-grid">' + map + (signs ? '<ul class="signs">' + signs + '</ul>' : '') + '</div>' + directions());
+  }
+  /* kako doći (opcionalno): D.directions = { destination: 'lat,lon' ili adresa, steps: [{ icon, text }], tip } */
+  function directions() {
+    var R = D.directions;
+    if (!R) return '';
+    var nav = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(R.destination || D.mapQuery);
+    return '<div class="dirs reveal"><div class="dirs-head"><h3>' + esc(t('dirTitle')) + '</h3>' +
+      '<a class="btn btn-primary" href="' + esc(nav) + '" target="_blank" rel="noopener">' + ic('nav') + esc(t('dirNavigate')) + '</a></div>' +
+      '<ol class="dirs-steps">' + (R.steps || []).map(function (st, i) {
+        return '<li style="--d:' + i + '"><span class="dirs-ic">' + ic(st.icon || 'road') + '</span><p>' + esc(L(st.text)) + '</p></li>';
+      }).join('') + '</ol>' +
+      (R.tip ? '<p class="dirs-tip">' + ic('snow') + '<span>' + esc(L(R.tip)) + '</span></p>' : '') + '</div>';
   }
   function mapSvg() {
     return '<svg viewBox="0 0 600 420" class="map-svg" aria-hidden="true">' +
@@ -281,7 +323,7 @@
     }
     var A = D.activities;
     if (!A) return '';
-    var body = '<div class="act-cols"><div class="act-col act-winter"><h3 class="act-h">' + ic('snow') + esc(t('doWinter')) + '</h3><ul>' + list(A.winter) + '</ul></div>' +
+    var body = weatherBox() + '<div class="act-cols"><div class="act-col act-winter"><h3 class="act-h">' + ic('snow') + esc(t('doWinter')) + '</h3><ul>' + list(A.winter) + '</ul></div>' +
       '<div class="act-col act-summer"><h3 class="act-h">' + ic('sun') + esc(t('doSummer')) + '</h3><ul>' + list(A.summer) + '</ul></div></div>' +
       '<div class="food reveal">' + ic('cheese') + '<div><h3>' + esc(L(A.food.title)) + '</h3><p>' + esc(L(A.food.text)) + '</p></div></div>';
     return section('activities', null, t('doTitle'), null, body, 'sec-alt');
@@ -351,7 +393,7 @@
     document.querySelector('.skip').textContent = t('skip');
     document.getElementById('topbar').innerHTML = topbar();
     document.getElementById('top').innerHTML = hero();
-    document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + amenities() + prices() + calc() + location() + activities() + reviews() + faq() + contact();
+    document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + amenities() + breakfast() + prices() + calc() + location() + activities() + reviews() + faq() + instagram() + contact();
     document.getElementById('foot').innerHTML = footer();
     document.getElementById('dock').innerHTML = dock();
     var tt = document.getElementById('to-top-wrap');
@@ -359,6 +401,7 @@
     tt.innerHTML = toTop();
     bindCalc();
     updateCalc(false);
+    loadWeather();
     observeReveal();
     FX.start(document.querySelector('.fx'));
   }
@@ -475,6 +518,57 @@
     document.getElementById('send-viber').addEventListener('click', function (e) { go('viber', e); });
     document.getElementById('send-wa').addEventListener('click', function (e) { go('wa', e); });
     updateNeed();
+  }
+
+  /* ---------------- vrijeme uživo (open-meteo.com) ---------------- */
+  var WX_CODES = [
+    [[0], 'sun', { bs: 'Vedro', en: 'Clear' }],
+    [[1, 2], 'cloudsun', { bs: 'Djelimično oblačno', en: 'Partly cloudy' }],
+    [[3], 'cloud', { bs: 'Oblačno', en: 'Cloudy' }],
+    [[45, 48], 'fog', { bs: 'Magla', en: 'Fog' }],
+    [[51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82], 'rain', { bs: 'Kiša', en: 'Rain' }],
+    [[71, 73, 75, 77, 85, 86], 'snow', { bs: 'Snijeg', en: 'Snow' }],
+    [[95, 96, 99], 'storm', { bs: 'Grmljavina', en: 'Thunderstorm' }]
+  ];
+  function wxInfo(code) {
+    for (var i = 0; i < WX_CODES.length; i++) if (WX_CODES[i][0].indexOf(code) !== -1) return { icon: WX_CODES[i][1], text: L(WX_CODES[i][2]) };
+    return { icon: 'cloud', text: '' };
+  }
+  var wxData = null;
+  function drawWeather() {
+    var el = document.getElementById('wx');
+    if (!el || !wxData) return;
+    var c = wxData.current, d = wxData.daily, now = wxInfo(c.weather_code);
+    var DAYS = { bs: ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+    var days = '';
+    for (var i = 1; i < Math.min(4, d.time.length); i++) {
+      var w = wxInfo(d.weather_code[i]), dt = parseDate(d.time[i]);
+      days += '<li><span>' + DAYS[lang][dt.getDay()] + '</span>' + ic(w.icon) + '<b>' + Math.round(d.temperature_2m_max[i]) + '°</b><small>' + Math.round(d.temperature_2m_min[i]) + '°</small></li>';
+    }
+    var snow = c.snow_depth != null && c.snow_depth > 0.01 ? '<span class="wx-chip">' + ic('snow') + esc(t('wxSnow', { cm: Math.round(c.snow_depth * 100) })) + '</span>' : '';
+    el.innerHTML = '<div class="wx-now"><p class="wx-label"><span class="wx-live"></span>' + esc(t('wxTitle', { place: D.place })) + '</p>' +
+      '<div class="wx-main">' + ic(now.icon, 'wx-big') + '<b>' + Math.round(c.temperature_2m) + '°C</b><span>' + esc(now.text) + '</span></div>' +
+      '<p class="wx-meta"><span class="wx-chip">' + ic('wind') + Math.round(c.wind_speed_10m) + ' km/h</span>' + snow + '</p></div>' +
+      '<ul class="wx-days" aria-label="' + esc(t('wxNext')) + '">' + days + '</ul>';
+    el.hidden = false;
+    requestAnimationFrame(function () { el.classList.add('in'); });
+  }
+  function loadWeather() {
+    if (!D.weather) return;
+    if (wxData) { drawWeather(); return; }
+    var key = 'planinka-wx-' + D.weather.lat + ',' + D.weather.lon;
+    try {
+      var cached = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (cached && Date.now() - cached.t < 30 * 60 * 1000) { wxData = cached.d; drawWeather(); return; }
+    } catch (e) { /* nema sessionStorage */ }
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + D.weather.lat + '&longitude=' + D.weather.lon +
+      '&current=temperature_2m,weather_code,wind_speed_10m,snow_depth&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FSarajevo&forecast_days=4';
+    fetch(url).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !j.current) return;
+      wxData = j;
+      try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: j })); } catch (e) { /* ništa */ }
+      drawWeather();
+    }).catch(function () { /* bez interneta ili API ne radi: kartica ostaje skrivena */ });
   }
 
   /* ---------------- kalendar za datume ---------------- */

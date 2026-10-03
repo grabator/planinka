@@ -81,6 +81,10 @@ Sve je opcionalno; ako polje ne postoji, stranica radi kao demo Planinka.
 | `badge`, `demoNote` | tekst na značkici prvog ekrana i napomena u footeru |
 | `ui: { kljuc: { bs, en } }` | promjena bilo kojeg teksta interfejsa iz `js/i18n.js` (npr. `aboutTitle`) |
 | `reviews: []`, `faq: []`, `activities: null` | prazno = sekcija se ne prikazuje |
+| `weather: { lat, lon }` | kartica "Trenutno: mjesto" sa temperaturom uživo i prognozom za 3 dana (open-meteo.com, besplatno, bez ključa) |
+| `breakfast: { text, items, time, note, image }` | sekcija "Doručak" (bez `image` se crta ilustracija) |
+| `instagramFeed: { images: [...] }` | sekcija "Pratite nas" sa 6 slika i dugmetom za Instagram (treba `contact.instagram`) |
+| `directions: { destination, steps, tip }` | "Kako doći" u sekciji Lokacija: koraci, dugme za navigaciju i zimski savjet |
 
 Video za web: `ffmpeg -i video.mp4 -an -c:v libx264 -crf 25 -pix_fmt yuv420p -movflags +faststart hero.mp4`
 i `ffmpeg -i hero.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 38 hero.webm`.

@@ -221,5 +221,35 @@
     }
   };
 
+  /* doručak: sto uz prozor, kafa, jaja, sir, hljeb */
+  SCENES.breakfast = function () {
+    return '<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" class="scene" aria-hidden="true">' +
+      '<rect width="800" height="600" fill="#efe6d8"/>' +
+      Array.apply(null, Array(10)).map(function (_, i) { return '<rect x="' + i * 80 + '" y="0" width="78" height="360" fill="' + (i % 2 ? '#e8ddcb' : '#ece2d2') + '"/>'; }).join('') +
+      /* prozor sa snijegom i jelkama */
+      '<rect x="470" y="50" width="260" height="230" rx="10" fill="#d6e8f2"/><path d="M470 220 Q600 190 730 225 V280 H470Z" fill="#fff"/>' +
+      '<path d="M520 225 l22-70 l22 70z M620 222 l26-90 l26 90z M690 226 l16-50 l16 50z" fill="#2f5d4a"/><path d="M528 190 l14-35 l14 35z M630 180 l16-48 l16 48z" fill="#fff" opacity=".85"/>' +
+      '<path d="M600 50 V280 M470 165 H730" stroke="#6b4a2f" stroke-width="10"/><rect x="462" y="42" width="276" height="246" rx="12" fill="none" stroke="#6b4a2f" stroke-width="12"/>' +
+      /* sto */
+      '<rect y="360" width="800" height="240" fill="#a5754a"/><path d="M0 360 H800" stroke="#8a5f3a" stroke-width="6"/>' +
+      Array.apply(null, Array(6)).map(function (_, i) { return '<path d="M0 ' + (400 + i * 38) + ' H800" stroke="#9a6b42" stroke-width="2" opacity=".5"/>'; }).join('') +
+      /* tanjir sa jajima i sirom */
+      '<ellipse cx="330" cy="455" rx="160" ry="62" fill="#f8f4ec"/><ellipse cx="330" cy="450" rx="128" ry="46" fill="#fffdf8"/>' +
+      '<ellipse cx="285" cy="445" rx="42" ry="20" fill="#fff"/><circle cx="288" cy="442" r="13" fill="#f4b63c"/>' +
+      '<ellipse cx="350" cy="455" rx="38" ry="18" fill="#fff"/><circle cx="352" cy="452" r="12" fill="#f4b63c"/>' +
+      '<path d="M385 420 l60 -6 l10 28 l-62 10z" fill="#f6efd6"/><path d="M385 420 l60 -6 l3 9 l-61 7z" fill="#e9dfbd"/>' +
+      '<path d="M250 470 q20 -10 40 0 q-20 10 -40 0z" fill="#6aa84f"/>' +
+      /* šoljica kafe sa parom */
+      '<ellipse cx="590" cy="470" rx="70" ry="22" fill="#f8f4ec"/><path d="M548 400 h84 v40 a42 30 0 0 1 -84 0z" fill="#fffdf8"/>' +
+      '<ellipse cx="590" cy="400" rx="42" ry="10" fill="#5a3420"/><path d="M632 412 q26 0 26 18 q0 18 -26 18" stroke="#fffdf8" stroke-width="9" fill="none"/>' +
+      '<g class="steam-group" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".8"><path d="M575 380 q-10 -20 0 -40 q10 -20 0 -40"/><path d="M605 380 q-10 -20 0 -40 q10 -20 0 -40"/></g>' +
+      /* korpa sa hljebom */
+      '<path d="M60 430 h150 l-14 60 h-122z" fill="#c08a4f"/><path d="M60 430 h150" stroke="#9a6a35" stroke-width="8"/>' +
+      '<ellipse cx="110" cy="420" rx="44" ry="22" fill="#d9a35f"/><ellipse cx="165" cy="424" rx="38" ry="18" fill="#c98f4c"/><path d="M90 412 l10 10 M112 408 l10 10 M150 418 l8 8" stroke="#a8743c" stroke-width="4" stroke-linecap="round"/>' +
+      /* staklenka meda / džema */
+      '<rect x="700" y="400" width="54" height="66" rx="12" fill="#e2a23a" opacity=".9"/><rect x="696" y="390" width="62" height="16" rx="6" fill="#8a5f3a"/>' +
+      '</svg>';
+  };
+
   window.PLANINKA_SCENES = SCENES;
 })();

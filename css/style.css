@@ -500,6 +500,65 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .scrolled .brand-logo-dark { display: block; }
 .foot-brand .brand-logo { height: 30px; }
 
+/* ---------- vrijeme uživo ---------- */
+.wx { display: grid; gap: 16px; margin-bottom: 22px; padding: 20px; border-radius: 24px; color: #fff; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-2) 92%, #000) 0%, color-mix(in srgb, var(--accent-2) 70%, var(--accent)) 100%); box-shadow: 0 20px 44px -24px rgba(0, 0, 0, 0.45); position: relative; overflow: hidden; }
+.wx::after { content: ''; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%); pointer-events: none; }
+.wx-label { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.9; }
+.wx-live { width: 8px; height: 8px; border-radius: 50%; background: #5ee08a; box-shadow: 0 0 0 0 rgba(94, 224, 138, 0.7); animation: wx-pulse 1.8s infinite; }
+@keyframes wx-pulse { 70% { box-shadow: 0 0 0 9px rgba(94, 224, 138, 0); } 100% { box-shadow: 0 0 0 0 rgba(94, 224, 138, 0); } }
+.wx-main { display: flex; align-items: center; gap: 12px; margin: 8px 0 10px; flex-wrap: wrap; }
+.wx-main .wx-big { width: 46px; height: 46px; stroke-width: 1.4; }
+.wx-main b { font-family: 'Fraunces', serif; font-size: 2.6rem; line-height: 1; font-weight: 600; }
+.wx-main > span { font-weight: 600; opacity: 0.92; }
+.wx-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.wx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); font-size: 0.8125rem; font-weight: 700; }
+.wx-chip .ic { width: 16px; height: 16px; }
+.wx-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wx-days li { display: grid; justify-items: center; gap: 4px; padding: 10px 6px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); font-size: 0.8125rem; }
+.wx-days li span { font-weight: 700; opacity: 0.85; }
+.wx-days .ic { width: 26px; height: 26px; }
+.wx-days b { font-size: 1.05rem; }
+.wx-days small { opacity: 0.7; }
+@media (min-width: 760px) { .wx { grid-template-columns: 1fr 1.1fr; align-items: center; padding: 26px 30px; } }
+
+/* ---------- doručak ---------- */
+.bf-grid { display: grid; gap: 22px; align-items: center; }
+.bf-art { border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 3; background: var(--card); box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.45); }
+.bf-art img, .bf-art .scene { width: 100%; height: 100%; object-fit: cover; }
+.bf-lead { font-size: 1.125rem; line-height: 1.6; margin-bottom: 18px; }
+.bf-items { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.bf-items li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-weight: 600; }
+.bf-items .ic { width: 20px; height: 20px; flex: none; color: var(--accent-ink); }
+.bf-time { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-ink); font-weight: 700; margin-bottom: 10px; }
+.bf-time .ic { width: 20px; height: 20px; }
+@media (min-width: 960px) { .bf-grid { grid-template-columns: 1.1fr 1fr; gap: 48px; } }
+
+/* ---------- kako doći ---------- */
+.dirs { margin-top: 22px; padding: 22px; border-radius: 24px; background: var(--card); border: 1px solid var(--line); }
+.dirs-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.dirs-head h3 { font-size: 1.5rem; }
+.dirs-head .btn { min-height: 46px; }
+.dirs-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: st; }
+.dirs-steps li { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 0 0 16px; }
+.dirs-steps li:not(:last-child)::before { content: ''; position: absolute; left: 21px; top: 44px; bottom: 2px; border-left: 2px dashed var(--line); }
+.dirs-ic { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 14px; background: var(--bg-alt); color: var(--accent-2); }
+.dirs-steps p { padding-top: 10px; line-height: 1.5; }
+.dirs-tip { display: flex; gap: 12px; align-items: flex-start; margin-top: 4px; padding: 14px 16px; border-radius: 16px; background: color-mix(in srgb, #4a90c2 12%, transparent); color: var(--ink); font-weight: 600; line-height: 1.5; }
+.dirs-tip .ic { width: 22px; height: 22px; flex: none; color: #3a7fb0; margin-top: 1px; }
+@media (min-width: 960px) { .dirs { padding: 30px; } .dirs-head .btn { flex: none; } }
+@media (max-width: 520px) { .dirs-head .btn { width: 100%; } }
+
+/* ---------- Instagram ---------- */
+.ig-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ig-grid a { position: relative; display: block; aspect-ratio: 1; overflow: hidden; border-radius: 12px; background: var(--bg-alt); }
+.ig-grid img, .ig-grid .scene { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ig-hover { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgba(10, 10, 12, 0.35); opacity: 0; transition: opacity 0.3s; }
+.ig-hover .ic { width: 34px; height: 34px; }
+.ig-grid a:hover img, .ig-grid a:hover .scene, .ig-grid a:focus-visible img { transform: scale(1.06); }
+.ig-grid a:hover .ig-hover, .ig-grid a:focus-visible .ig-hover { opacity: 1; }
+.ig-cta { margin-top: 24px; }
+@media (min-width: 760px) { .ig-grid { gap: 12px; } .ig-grid a { border-radius: 18px; } }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }

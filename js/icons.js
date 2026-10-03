@@ -42,6 +42,15 @@
     calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     down: '<path d="M6 9l6 6 6-6"/>',
+    cloud: '<path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 11 3.5 3.5 0 0 0 7 18z"/>',
+    cloudsun: '<path d="M9 18h8a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 8 12.2 3 3 0 0 0 9 18z"/><path d="M6 4v1.5M2.5 7.5H4M3.6 4.6l1 1M9.4 4.6l-1 1"/><path d="M8.6 9.2A3 3 0 1 0 5 10.8"/>',
+    rain: '<path d="M7 15h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 8 3.5 3.5 0 0 0 7 15z"/><path d="M9 18l-1 2.5M13 18l-1 2.5M17 18l-1 2.5"/>',
+    fog: '<path d="M7 12h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 5 3.5 3.5 0 0 0 7 12z"/><path d="M4 16h16M6 20h12"/>',
+    storm: '<path d="M7 15h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 8 3.5 3.5 0 0 0 7 15z"/><path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+    wind: '<path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h7"/>',
+    nav: '<path d="M3 11l18-8-8 18-2-8z"/>',
+    road: '<path d="M8 3l-4 18M16 3l4 18M12 4v3M12 10v3M12 16v3"/>',
+    chain: '<path d="M9 15l6-6"/><path d="M11 6l1.5-1.5a3.5 3.5 0 0 1 5 5L16 11M13 18l-1.5 1.5a3.5 3.5 0 0 1-5-5L8 13"/>',
     up: '<path d="M12 19V5M6 11l6-6 6 6"/>'
   };
   window.PLANINKA_ICON = function (name, cls) {

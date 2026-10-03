@@ -1,0 +1,5 @@
+# Demo: stranica ima "noindex" u index.html. Za pravog klijenta vidi README, "SEO".
+User-agent: *
+Allow: /
+
+Sitemap: https://planinka.pages.dev/sitemap.xml

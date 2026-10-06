@@ -140,7 +140,8 @@
         (lg.mark ? '<img class="hl-mark" src="' + esc(lg.mark) + '" alt="" aria-hidden="true">' : '') +
         '<img class="hl-word" src="' + esc(lg.word) + '" alt="" aria-hidden="true"></h1>';
     }
-    var letters = D.name.split('').map(function (ch, i) { return '<span style="--i:' + i + '">' + (ch === ' ' ? '&nbsp;' : esc(ch)) + '</span>'; }).join('');
+    /* slova se pojavljuju jedno za drugim; razmak ostaje običan da se dugo ime može prelomiti u dva reda */
+    var letters = D.name.split('').map(function (ch, i) { return ch === ' ' ? ' ' : '<span style="--i:' + i + '">' + esc(ch) + '</span>'; }).join('');
     return '<h1 class="hero-h1"><span class="h1-small">' + esc(L(D.kind)) + '</span><span class="sr-only">' + esc(D.name) + '</span><span class="h1-name" aria-hidden="true">' + letters + '</span><span class="h1-place">' + esc(D.place) + '</span></h1>';
   }
   function hero() {

@@ -16,8 +16,10 @@
   function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function save(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* privatni prozor */ } }
 
-  var lang = load('planinka-lang') || 'bs';
-  if (lang !== 'en') lang = 'bs';
+  /* jezici stranice: D.languages, npr. ['bs', 'en', 'de'] (zadano bs i en) */
+  var LANGS = (D.languages && D.languages.length ? D.languages : ['bs', 'en']).filter(function (l) { return UI[l]; });
+  var lang = load('planinka-lang') || LANGS[0];
+  if (LANGS.indexOf(lang) === -1) lang = LANGS[0];
   /* opcionalni dijelovi: pricing (null = cijene na upit), rooms, seasons: false, heroVideo, heroLogo, theme ... */
   var P = D.pricing || null;
   var SEASONS = D.seasons !== false;
@@ -42,19 +44,30 @@
     if (vars && typeof v === 'string') v = v.replace(/\{(\w+)\}/g, function (_, k) { return vars[k] != null ? vars[k] : ''; });
     return v;
   }
-  function L(v) { return v == null ? '' : (typeof v === 'object' && !Array.isArray(v) ? (v[lang] != null ? v[lang] : v.bs) : v); }
+  /* tekst na trenutnom jeziku; ako njemački fali, pokaže engleski, pa bosanski */
+  function L(v) {
+    if (v == null) return '';
+    if (typeof v !== 'object' || Array.isArray(v)) return v;
+    if (v[lang] != null) return v[lang];
+    if (lang !== 'bs' && v.en != null) return v.en;
+    return v.bs;
+  }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function plural(forms, n) {
-    if (lang === 'en') return (n === 1 ? forms.one : forms.other).replace('{n}', n);
+    if (lang !== 'bs') return (n === 1 ? forms.one : forms.other).replace('{n}', n);
     var m10 = n % 10, m100 = n % 100;
     var f = (m10 === 1 && m100 !== 11) ? 'one' : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 'few' : 'other';
     return (forms[f] || forms.other).replace('{n}', n);
   }
-  function money(n) { return Math.round(n).toLocaleString(lang === 'en' ? 'en-US' : 'bs-BA').replace(/,/g, lang === 'en' ? ',' : '.'); }
+  function money(n) {
+    var s = String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'en' ? ',' : '.');
+    return s;
+  }
   function parseDate(s) { if (!s) return null; var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function fmtDate(d) {
     if (lang === 'en') return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (lang === 'de') return d.getDate() + '. ' + ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'][d.getMonth()] + ' ' + d.getFullYear();
     return d.getDate() + '. ' + (d.getMonth() + 1) + '. ' + d.getFullYear() + '.';
   }
   function sceneOrImage(item, cls) {
@@ -87,7 +100,7 @@
       '<nav class="topnav" aria-label="Navigacija">' + nav + '<span class="topnav-pill" aria-hidden="true"></span></nav>' +
       '<div class="toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div>' +
       '<a class="btn btn-primary top-cta" href="#calc">' + ic('calendar') + '<span>' + esc(t('dockCta')) + '</span></a>' +
-      '<button type="button" class="menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="guide">' +
+      '<button type="button" class="menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="guide" aria-label="' + esc(t('menu')) + '">' +
       '<span class="mb-lines" aria-hidden="true"><i></i><i></i></span><span class="mb-label">' + esc(t('menu')) + '</span></button></div>';
   }
   function brandMark(onDark) {
@@ -105,9 +118,10 @@
       '<span class="seg-thumb" aria-hidden="true"></span></div>';
   }
   function langToggle() {
+    if (LANGS.length < 2) return '';
     return '<div class="seg seg-lang" role="group" aria-label="' + esc(t('langLabel')) + '">' +
-      ['bs', 'en'].map(function (l) { return '<button type="button" data-lang="' + l + '" aria-pressed="' + (lang === l) + '" lang="' + l + '">' + l.toUpperCase() + '</button>'; }).join('') +
-      '<span class="seg-thumb" aria-hidden="true"></span></div>';
+      LANGS.map(function (l) { return '<button type="button" data-lang="' + l + '" aria-pressed="' + (lang === l) + '" lang="' + l + '">' + l.toUpperCase() + '</button>'; }).join('') +
+      '<span class="seg-thumb" aria-hidden="true" style="--n:' + LANGS.length + ';--k:' + LANGS.indexOf(lang) + '"></span></div>';
   }
 
   function heroArt() {
@@ -724,13 +738,13 @@
 
   /* ---------------- vrijeme uživo (open-meteo.com) ---------------- */
   var WX_CODES = [
-    [[0], 'sun', { bs: 'Vedro', en: 'Clear' }],
-    [[1, 2], 'cloudsun', { bs: 'Djelimično oblačno', en: 'Partly cloudy' }],
-    [[3], 'cloud', { bs: 'Oblačno', en: 'Cloudy' }],
-    [[45, 48], 'fog', { bs: 'Magla', en: 'Fog' }],
-    [[51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82], 'rain', { bs: 'Kiša', en: 'Rain' }],
-    [[71, 73, 75, 77, 85, 86], 'snow', { bs: 'Snijeg', en: 'Snow' }],
-    [[95, 96, 99], 'storm', { bs: 'Grmljavina', en: 'Thunderstorm' }]
+    [[0], 'sun', { bs: 'Vedro', en: 'Clear', de: 'Klar' }],
+    [[1, 2], 'cloudsun', { bs: 'Djelimično oblačno', en: 'Partly cloudy', de: 'Teilweise bewölkt' }],
+    [[3], 'cloud', { bs: 'Oblačno', en: 'Cloudy', de: 'Bewölkt' }],
+    [[45, 48], 'fog', { bs: 'Magla', en: 'Fog', de: 'Nebel' }],
+    [[51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82], 'rain', { bs: 'Kiša', en: 'Rain', de: 'Regen' }],
+    [[71, 73, 75, 77, 85, 86], 'snow', { bs: 'Snijeg', en: 'Snow', de: 'Schnee' }],
+    [[95, 96, 99], 'storm', { bs: 'Grmljavina', en: 'Thunderstorm', de: 'Gewitter' }]
   ];
   function wxInfo(code) {
     for (var i = 0; i < WX_CODES.length; i++) if (WX_CODES[i][0].indexOf(code) !== -1) return { icon: WX_CODES[i][1], text: L(WX_CODES[i][2]) };
@@ -741,7 +755,7 @@
     var el = document.getElementById('wx');
     if (!el || !wxData) return;
     var c = wxData.current, d = wxData.daily, now = wxInfo(c.weather_code);
-    var DAYS = { bs: ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
+    var DAYS = { bs: ['Nedjelja', 'Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'] };
     var n = Math.min(4, d.time.length), lo = Infinity, hi = -Infinity, i;
     for (i = 0; i < n; i++) { lo = Math.min(lo, d.temperature_2m_min[i]); hi = Math.max(hi, d.temperature_2m_max[i]); }
     var span = Math.max(1, hi - lo), days = '';
@@ -789,9 +803,10 @@
     var month = null, picking = 'a', openEl = null;
     var MONTHS = {
       bs: ['januar', 'februar', 'mart', 'april', 'maj', 'juni', 'juli', 'august', 'septembar', 'oktobar', 'novembar', 'decembar'],
-      en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
     };
-    var DAYS = { bs: ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] };
+    var DAYS = { bs: ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] };
     function today() { return parseDate(iso(new Date())); }
     function draw() {
       var el = document.getElementById('cal');
@@ -1109,7 +1124,8 @@
   })();
 
   /* zaglavlje: prozirno na vrhu, puno kad se skrola; dock se pojavi nakon prvog ekrana */
-  var ticking = false;
+  var ticking = false, sEls = {};
+  function scrollEls() { sEls = { prog: document.getElementById('to-top-prog'), art: document.querySelector('.hero-art'), hin: document.querySelector('.hero-in'), bar: document.getElementById('topbar') }; }
   window.addEventListener('scroll', function () {
     if (ticking) return; ticking = true;
     requestAnimationFrame(function () {
@@ -1118,11 +1134,12 @@
       root.classList.toggle('scrolled', y > 40);
       root.classList.toggle('past-hero', y > window.innerHeight * 0.6);
       root.classList.toggle('show-top', y > window.innerHeight * 1.2);
-      var prog = document.getElementById('to-top-prog');
+      if (!sEls.prog || !document.contains(sEls.prog)) scrollEls();
+      var prog = sEls.prog;
       if (prog) { var max = document.documentElement.scrollHeight - window.innerHeight; prog.style.strokeDashoffset = String(138.2 * (1 - Math.min(1, y / Math.max(1, max)))); }
       var max2 = document.documentElement.scrollHeight - window.innerHeight;
-      root.style.setProperty('--progress', String(Math.min(1, y / Math.max(1, max2))));
-      var art = document.querySelector('.hero-art'), hin = document.querySelector('.hero-in');
+      if (sEls.bar) sEls.bar.style.setProperty('--progress', String(Math.min(1, y / Math.max(1, max2))));
+      var art = sEls.art, hin = sEls.hin;
       if (!reduced && y < window.innerHeight) {
         if (art) art.style.transform = 'translateY(' + (y * 0.25) + 'px) scale(1.04)';
         if (hin) { hin.style.opacity = String(Math.max(0, 1 - y / (window.innerHeight * 0.75))); hin.style.transform = 'translateY(' + (y * -0.12) + 'px)'; }

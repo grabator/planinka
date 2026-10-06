@@ -4,7 +4,7 @@ Demo web stranica za izmišljenu vikendicu "Planinka" na Vlašiću. Služi kao p
 vlasnicima vikendica i apartmana. Vikendica, cijene, recenzije i kontakt su izmišljeni.
 
 Stranica je čisti HTML, CSS i JavaScript: nema frameworka, servera ni baze. Radi na mobitelu i
-desktopu, na bosanskom i engleskom, sa zimskom i ljetnom verzijom.
+desktopu, na bosanskom, engleskom i njemačkom, sa zimskom i ljetnom verzijom.
 
 ## Šta ima
 
@@ -49,7 +49,7 @@ robots.txt, sitemap.xml
 ## Novi klijent, korak po korak
 
 1. **Podaci:** otvori `data/vikendica.js` i promijeni ime, opis, činjenice, sadržaje, cijene, udaljenosti,
-   aktivnosti, recenzije, pitanja i kontakt. Svaki tekst ima `bs` i `en` verziju.
+   aktivnosti, recenzije, pitanja i kontakt. Svaki tekst ima `bs`, `en` i (za njemački) `de` verziju.
    - Postavi `demo: false` (sklanja napomenu "Demo stranica").
    - `credit: { name: 'Tvoje ime', url: 'https://...' }` doda potpis u footer.
 2. **Cijene:** `pricing.winter` i `pricing.summer` po noćenju, `winterMonths` (mjeseci zimske sezone),
@@ -85,6 +85,7 @@ Sve je opcionalno; ako polje ne postoji, stranica radi kao demo Planinka.
 | `badge`, `demoNote` | tekst na značkici prvog ekrana i napomena u footeru |
 | `ui: { kljuc: { bs, en } }` | promjena bilo kojeg teksta interfejsa iz `js/i18n.js` (npr. `aboutTitle`) |
 | `reviews: []`, `faq: []`, `activities: null` | prazno = sekcija se ne prikazuje |
+| `languages: ['bs', 'en', 'de']` | jezici stranice (prvi je zadani). Tekstovi u podacima imaju `de`; ako fali, pokaže se engleski |
 | `ribbon: false` | isključuje traku sa sadržajima koja klizi ispod sekcije "O nama" |
 | `weather: { lat, lon }` | kartica "Trenutno: mjesto" sa temperaturom uživo i prognozom za 3 dana (open-meteo.com, besplatno, bez ključa) |
 | `breakfast: { text, items, time, note, image }` | sekcija "Doručak" (bez `image` se crta ilustracija) |
@@ -118,6 +119,6 @@ i `ffmpeg -i hero.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 38 hero.webm`.
 
 - Kalendar zauzetosti koji se sam puni iz Booking.com / Airbnb (iCal link).
 - Online plaćanje kapare karticom.
-- Više jezika (njemački za dijasporu).
+- Još jezika (npr. italijanski ili turski), po istom principu kao njemački.
 - Više smještajnih jedinica na jednoj stranici (apartmani u istoj kući).
 - Statistika posjeta (Cloudflare Web Analytics, bez kolačića).

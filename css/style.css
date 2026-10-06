@@ -118,8 +118,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .seg button span { display: none; }
 .seg-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.2, 1.1); }
 .seg button[aria-pressed='true'] { color: var(--ink); }
-.seg-season button[data-season='summer'][aria-pressed='true'] ~ .seg-thumb,
-.seg-lang button[data-lang='en'][aria-pressed='true'] ~ .seg-thumb { transform: translateX(100%); }
+.seg-season button[data-season='summer'][aria-pressed='true'] ~ .seg-thumb { transform: translateX(100%); }
+.seg-lang button { flex: 1 1 0; }
+.seg-lang .seg-thumb { width: calc((100% - 6px) / var(--n, 2)); transform: translateX(calc(var(--k, 0) * 100%)); }
 .scrolled .seg-thumb { background: var(--ink); }
 .scrolled .seg button[aria-pressed='true'] { color: var(--bg); }
 
@@ -726,6 +727,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sec-head.in .eyebrow::before { width: 28px; }
 .reveal { filter: blur(4px); transition-property: opacity, transform, filter; }
 .reveal.in { filter: none; }
+@media (hover: none) { .reveal { filter: none; } }
 
 /* ---------- slike se otkrivaju ---------- */
 .g-item .g-btn, .room-art, .about-art .frame, .bf-art { clip-path: inset(10% 10% 10% 10% round 22px); transition: clip-path 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -767,6 +769,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .foot::before { background: var(--accent-2); }
 .sec-alt + .sec-alt::before, .ribbon + .sec-alt::before { display: none; }
 #main > .sec:first-of-type::before { display: none; }
+
+/* ---------- uski ekrani i duge riječi (njemački) ---------- */
+.amen, .fact-list, .gallery, .gd-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.amen-i, .fact span, .gd-txt b, .gd-txt small, .sign-place, .act h3, .bf-items li, .dirs-steps p, .price-inc li, .contact-card b, .need li { overflow-wrap: anywhere; -webkit-hyphens: auto; hyphens: auto; }
+@media (max-width: 479px) {
+  .topbar .menu-btn { width: 44px; padding: 0; justify-content: center; }
+  .topbar .menu-btn .mb-label { display: none; }
+  .topbar .seg button { min-width: 36px; padding: 0 8px; }
+  .brand { font-size: 1.15rem; }
+}
+@media (min-width: 640px) {
+  .amen, .gallery, .gd-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fact-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) { .amen { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.gd-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -51,6 +51,11 @@
     nav: '<path d="M3 11l18-8-8 18-2-8z"/>',
     road: '<path d="M8 3l-4 18M16 3l4 18M12 4v3M12 10v3M12 16v3"/>',
     chain: '<path d="M9 15l6-6"/><path d="M11 6l1.5-1.5a3.5 3.5 0 0 1 5 5L16 11M13 18l-1.5 1.5a3.5 3.5 0 0 1-5-5L8 13"/>',
+    tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>',
+    home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    image: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M4 18l6-5 4 3 3-2 4 3"/>',
+    spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
     up: '<path d="M12 19V5M6 11l6-6 6 6"/>'
   };
   window.PLANINKA_ICON = function (name, cls) {

@@ -17,6 +17,10 @@ desktopu, na bosanskom i engleskom, sa zimskom i ljetnom verzijom.
   Datumi, ime i telefon su obavezni: dugmad su zaključana dok sve nije popunjeno, uz listu šta još fali.
 - Lokacija sa stilizovanom mapom i "putokazima", šta raditi na Vlašiću, recenzije, pitanja, kontakt.
 - Donja traka na mobitelu: Pozovi, Viber, Provjeri.
+- **Meni-vodič**: dugme "Meni" otvara ekran sa pločicama za svaki dio stranice (broj slika, soba, cijena "od", udaljenost do staze...),
+  brzim kontaktom i postavkama. Pločica "Ovdje ste" pokazuje gdje je gost. Pravi se sam iz sekcija koje postoje.
+- Premium animacije: slova imena na prvom ekranu, naslovi sekcija koji izlaze riječ po riječ, slike koje se otkrivaju,
+  brojevi koji odbroje, traka napretka u zaglavlju, aktivni link u meniju, traka sa sadržajima koja klizi, planinski greben između sekcija.
 - Pamti izabrani jezik i sezonu. Poštuje "smanji pokrete" (reduced motion), radi tastaturom.
 
 ## Pokretanje lokalno
@@ -81,6 +85,7 @@ Sve je opcionalno; ako polje ne postoji, stranica radi kao demo Planinka.
 | `badge`, `demoNote` | tekst na značkici prvog ekrana i napomena u footeru |
 | `ui: { kljuc: { bs, en } }` | promjena bilo kojeg teksta interfejsa iz `js/i18n.js` (npr. `aboutTitle`) |
 | `reviews: []`, `faq: []`, `activities: null` | prazno = sekcija se ne prikazuje |
+| `ribbon: false` | isključuje traku sa sadržajima koja klizi ispod sekcije "O nama" |
 | `weather: { lat, lon }` | kartica "Trenutno: mjesto" sa temperaturom uživo i prognozom za 3 dana (open-meteo.com, besplatno, bez ključa) |
 | `breakfast: { text, items, time, note, image }` | sekcija "Doručak" (bez `image` se crta ilustracija) |
 | `instagramFeed: { images: [...] }` | sekcija "Pratite nas" sa 6 slika i dugmetom za Instagram (treba `contact.instagram`) |

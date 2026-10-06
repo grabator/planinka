@@ -65,8 +65,15 @@
     return '<section class="sec ' + (cls || '') + '" id="' + id + '" aria-labelledby="' + id + '-t">' +
       '<div class="wrap">' +
       '<header class="sec-head reveal">' + (eyebrow ? '<p class="eyebrow">' + esc(eyebrow) + '</p>' : '') +
-      '<h2 id="' + id + '-t">' + esc(title) + '</h2>' + (lead ? '<p class="lead">' + esc(lead) + '</p>' : '') + '</header>' +
+      '<h2 id="' + id + '-t" class="split">' + splitWords(title) + '</h2>' + (lead ? '<p class="lead">' + esc(lead) + '</p>' : '') + '</header>' +
       body + '</div></section>';
+  }
+
+  /* riječi naslova u zasebnim span-ovima, da se pojavljuju jedna za drugom */
+  function splitWords(text) {
+    return String(text).split(/\s+/).map(function (w, i) {
+      return '<span class="w"><span style="--i:' + i + '">' + esc(w) + '</span></span>';
+    }).join(' ');
   }
 
   /* ---------------- dijelovi stranice ---------------- */
@@ -77,8 +84,11 @@
     }).join('');
     return '<div class="topbar-in">' +
       '<a class="brand' + (D.brandLogo ? ' has-logo' : '') + '" href="#top" aria-label="' + esc(L(D.title)) + '"><span class="brand-mark" aria-hidden="true">' + brandMark() + '</span><span class="brand-name">' + esc(D.name) + '</span></a>' +
-      '<nav class="topnav" aria-label="Navigacija">' + nav + '</nav>' +
-      '<div class="toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div></div>';
+      '<nav class="topnav" aria-label="Navigacija">' + nav + '<span class="topnav-pill" aria-hidden="true"></span></nav>' +
+      '<div class="toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div>' +
+      '<a class="btn btn-primary top-cta" href="#calc">' + ic('calendar') + '<span>' + esc(t('dockCta')) + '</span></a>' +
+      '<button type="button" class="menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="guide">' +
+      '<span class="mb-lines" aria-hidden="true"><i></i><i></i></span><span class="mb-label">' + esc(t('menu')) + '</span></button></div>';
   }
   function brandMark(onDark) {
     /* D.brandLogo: { light: 'logo za tamnu pozadinu (bijeli)', dark: 'logo za svijetlu pozadinu' } */
@@ -116,7 +126,8 @@
         (lg.mark ? '<img class="hl-mark" src="' + esc(lg.mark) + '" alt="" aria-hidden="true">' : '') +
         '<img class="hl-word" src="' + esc(lg.word) + '" alt="" aria-hidden="true"></h1>';
     }
-    return '<h1 class="reveal"><span class="h1-small">' + esc(L(D.kind)) + '</span>' + esc(D.name) + '<span class="h1-place">' + esc(D.place) + '</span></h1>';
+    var letters = D.name.split('').map(function (ch, i) { return '<span style="--i:' + i + '">' + (ch === ' ' ? '&nbsp;' : esc(ch)) + '</span>'; }).join('');
+    return '<h1 class="hero-h1"><span class="h1-small">' + esc(L(D.kind)) + '</span><span class="sr-only">' + esc(D.name) + '</span><span class="h1-name" aria-hidden="true">' + letters + '</span><span class="h1-place">' + esc(D.place) + '</span></h1>';
   }
   function hero() {
     return '<div class="hero-art">' + heroArt() + '</div>' +
@@ -138,7 +149,8 @@
   function facts() {
     return '<section class="facts" aria-label="' + esc(t('factsTitle')) + '"><div class="wrap"><ul class="fact-list">' +
       D.facts.map(function (f, i) {
-        return '<li class="fact reveal" style="--d:' + i + '">' + ic(f.icon) + '<span>' + (f.value ? '<b>' + esc(f.value) + '</b> ' : '') + esc(L(f.label)) + '</span></li>';
+        var num = f.value && /^\d+$/.test(String(f.value));
+        return '<li class="fact reveal" style="--d:' + i + '"><span class="fact-ic">' + ic(f.icon) + '</span><span>' + (f.value ? '<b' + (num ? ' data-count="' + esc(f.value) + '"' : '') + '>' + esc(f.value) + '</b> ' : '') + esc(L(f.label)) + '</span></li>';
       }).join('') + '</ul></div></section>';
   }
 
@@ -165,7 +177,7 @@
   function rooms() {
     if (!D.rooms || !D.rooms.length) return '';
     var body = '<ul class="rooms">' + D.rooms.map(function (r, i) {
-      return '<li class="room reveal" style="--d:' + i + '">' +
+      return '<li class="room spot reveal" style="--d:' + i + '">' +
         '<div class="room-art">' + sceneOrImage(r) + '</div>' +
         '<div class="room-body"><h3>' + esc(L(r.title)) + '</h3>' +
         '<p class="room-beds">' + ic('bed') + esc(L(r.beds)) + (r.guests ? ' · ' + ic('guests') + esc(t('upToGuests', { n: r.guests })) : '') + '</p>' +
@@ -175,9 +187,16 @@
     return section('rooms', null, t('roomsTitle'), L(D.roomsLead) || t('roomsLead'), body);
   }
 
+  /* traka koja polako klizi: sadržaji vikendice (D.ribbon: false je isključuje) */
+  function ribbon() {
+    if (D.ribbon === false || !D.amenities || !D.amenities.length) return '';
+    var items = D.amenities.map(function (a) { return '<li>' + ic(a.icon) + esc(L(a.label)) + '</li>'; }).join('');
+    return '<div class="ribbon" aria-hidden="true"><ul class="ribbon-track">' + items + items + '</ul></div>';
+  }
+
   function amenities() {
     var body = '<ul class="amen">' + D.amenities.map(function (a, i) {
-      return '<li class="amen-i reveal" style="--d:' + (i % 6) + '"><span class="amen-ic">' + ic(a.icon) + '</span>' + esc(L(a.label)) + '</li>';
+      return '<li class="amen-i spot reveal" style="--d:' + (i % 6) + '"><span class="amen-ic">' + ic(a.icon) + '</span>' + esc(L(a.label)) + '</li>';
     }).join('') + '</ul>';
     return section('amenities', null, t('amenitiesTitle'), t('amenitiesLead'), body, 'sec-alt');
   }
@@ -216,9 +235,9 @@
     if (!P) return '';
     var p = P;
     function card(kind) {
-      return '<div class="price-card price-' + kind + ' reveal">' +
+      return '<div class="price-card spot price-' + kind + ' reveal">' +
         '<div class="price-top">' + ic(kind === 'winter' ? 'snow' : 'sun') + '<div><h3>' + esc(t(kind + 'Season')) + '</h3><p>' + esc(t(kind + 'Months')) + '</p></div></div>' +
-        '<p class="price-num"><b>' + money(p[kind]) + '</b> ' + esc(p.currency) + ' <span>' + esc(t('perNight')) + '</span></p>' +
+        '<p class="price-num"><b' + (p[kind] < 1000 ? ' data-count="' + p[kind] + '"' : '') + '>' + money(p[kind]) + '</b> ' + esc(p.currency) + ' <span>' + esc(t('perNight')) + '</span></p>' +
         '<p class="price-sub">' + esc(t('upTo', { n: p.baseGuests })) + ' · ' + esc(t('extraGuest', { p: p.extraGuest, c: p.currency })) + '</p></div>';
     }
     var body = '<div class="price-grid">' + card('winter') + card('summer') +
@@ -334,7 +353,7 @@
     var body = '<ul class="reviews">' + D.reviews.map(function (r, i) {
       var stars = '';
       for (var s = 0; s < 5; s++) stars += '<span class="' + (s < r.rating ? 'on' : '') + '">' + ic('star') + '</span>';
-      return '<li class="review reveal" style="--d:' + i + '"><div class="stars" aria-label="' + r.rating + '/5">' + stars + '</div>' +
+      return '<li class="review spot reveal" style="--d:' + i + '"><div class="stars" aria-label="' + r.rating + '/5">' + stars + '</div>' +
         '<blockquote>' + esc(L(r.text)) + '</blockquote><p class="who"><b>' + esc(r.name) + '</b> · ' + esc(L(r.from)) + '</p></li>';
     }).join('') + '</ul>' + (D.demo ? '<p class="muted small center">' + esc(t('reviewsDemo')) + '</p>' : '');
     return section('reviews', null, t('reviewsTitle'), null, body);
@@ -357,7 +376,7 @@
       ['mail', t('email'), 'mailto:' + c.email, c.email],
       ['insta', t('instagram'), 'https://instagram.com/' + c.instagram, '@' + c.instagram]
     ].filter(function (l) { return l[3] && !/undefined/.test(l[2]); }).map(function (l, i) {
-      return '<li class="reveal" style="--d:' + i + '"><a class="contact-card" href="' + esc(l[2]) + '"' + (/^https/.test(l[2]) ? ' target="_blank" rel="noopener"' : '') + '>' + ic(l[0]) + '<span><b>' + esc(l[1]) + '</b><small>' + esc(l[3]) + '</small></span></a></li>';
+      return '<li class="reveal" style="--d:' + i + '"><a class="contact-card spot" href="' + esc(l[2]) + '"' + (/^https/.test(l[2]) ? ' target="_blank" rel="noopener"' : '') + '>' + ic(l[0]) + '<span><b>' + esc(l[1]) + '</b><small>' + esc(l[3]) + '</small></span></a></li>';
     }).join('');
     return section('contact', null, t('contactTitle'), t('contactLead'), '<ul class="contact-grid">' + links + '</ul>');
   }
@@ -381,6 +400,187 @@
       '<a class="dock-btn dock-cta" href="#calc">' + ic('calendar') + '<span>' + esc(t('dockCta')) + '</span></a>';
   }
 
+  /* ---------------- vodič (meni): pločice sa svim dijelovima stranice ---------------- */
+  var GUIDE_ICONS = { gallery: 'image', rooms: 'bed', about: 'home', amenities: 'spark', breakfast: 'coffee', prices: 'tag', calc: 'calendar', location: 'pin', activities: 'ski', reviews: 'star', faq: 'chat', instagram: 'insta', contact: 'phone' };
+  function guideMeta(id) {
+    var c = D.contact || {};
+    switch (id) {
+      case 'gallery': return plural(t('guidePhotos'), D.gallery.length);
+      case 'rooms': return plural(t('guideRooms'), D.rooms.length);
+      case 'about': return t('aboutEyebrow');
+      case 'amenities': return plural(t('guideAmen'), D.amenities.length);
+      case 'breakfast': return L(D.breakfast.time) || t('breakfastEyebrow');
+      case 'prices': return t('guideFrom', { p: money(Math.min(P.winter, P.summer)), c: P.currency });
+      case 'calc': return t('guideCalc');
+      case 'location': return D.distances && D.distances[0] ? L(D.distances[0].place) + ' · ' + L(D.distances[0].time) : L(D.place);
+      case 'activities': return t('doWinter') + ' · ' + t('doSummer');
+      case 'reviews':
+        var sum = D.reviews.reduce(function (a, r) { return a + r.rating; }, 0);
+        return t('guideReviews', { r: (sum / D.reviews.length).toFixed(1).replace('.', lang === 'en' ? '.' : ',') });
+      case 'faq': return plural(t('guideFaq'), D.faq.length);
+      case 'instagram': return '@' + c.instagram;
+      case 'contact': return c.phone || '';
+    }
+    return '';
+  }
+  function guideHtml() {
+    var c = D.contact || {};
+    var secs = [].slice.call(document.querySelectorAll('#main section.sec[id]'));
+    var calc = secs.filter(function (x) { return x.id === 'calc'; });
+    secs = calc.concat(secs.filter(function (x) { return x.id !== 'calc'; }));
+    var tiles = secs.map(function (sec, i) {
+      var h = sec.querySelector('h2'), id = sec.id;
+      return '<li style="--i:' + i + '"><a class="gd-tile' + (id === 'calc' ? ' gd-feat' : '') + '" href="#' + id + '" data-go="' + id + '">' +
+        '<span class="gd-num">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<span class="gd-ic">' + ic(GUIDE_ICONS[id] || 'arrow') + '</span>' +
+        '<span class="gd-txt"><b>' + esc(h ? h.textContent.replace(/\s+/g, ' ').trim() : id) + '</b><small>' + esc(guideMeta(id)) + '</small></span>' +
+        '<span class="gd-here">' + esc(t('guideHere')) + '</span>' + (id === 'calc' ? ic('arrow', 'gd-go') : '') + '</a></li>';
+    }).join('');
+    var quick = [
+      c.phone ? '<a class="gd-q" href="tel:' + esc(c.phone.replace(/\s/g, '')) + '">' + ic('phone') + '<span>' + esc(t('call')) + '</span></a>' : '',
+      c.viber ? '<a class="gd-q gd-q-viber" href="viber://chat?number=' + encodeURIComponent(c.viber) + '">' + ic('viber') + '<span>' + esc(t('viber')) + '</span></a>' : '',
+      c.whatsapp ? '<a class="gd-q gd-q-wa" href="https://wa.me/' + esc(c.whatsapp) + '" target="_blank" rel="noopener">' + ic('whatsapp') + '<span>' + esc(t('whatsapp')) + '</span></a>' : ''
+    ].join('');
+    return '<div class="guide-bg" aria-hidden="true"><svg viewBox="0 0 1200 300" preserveAspectRatio="none"><path class="gb-1" d="M0 300V190l120-70 90 50 140-110 120 90 110-60 160 120 130-80 140 70 190-100v200z"/><path class="gb-2" d="M0 300V240l160-60 120 40 150-80 130 70 170-50 140 60 160-70 170 50v100z"/></svg></div>' +
+      '<div class="guide-in">' +
+      '<div class="guide-top"><span class="guide-brand">' + brandMark(true) + '<span>' + esc(D.name) + '</span></span>' +
+      '<button type="button" class="menu-btn is-x" data-guide-close>' + '<span class="mb-lines" aria-hidden="true"><i></i><i></i></span><span class="mb-label">' + esc(t('menuClose')) + '</span></button></div>' +
+      '<div class="guide-grid"><div class="guide-side">' +
+      '<p class="eyebrow">' + esc(t('guideEyebrow', { name: D.name })) + '</p>' +
+      '<h2 id="guide-t" class="guide-h">' + esc(t('guideTitle')) + '</h2>' +
+      '<p class="guide-lead">' + esc(L(D.tagline)) + '</p></div>' +
+      '<ol class="gd-tiles">' + tiles + '</ol>' +
+      '<div class="guide-side guide-extra">' +
+      (quick ? '<p class="guide-label">' + esc(t('guideQuick')) + '</p><div class="gd-quick">' + quick + '</div>' : '') +
+      '<p class="guide-label">' + esc(t('guideSettings')) + '</p><div class="gd-toggles">' + (SEASONS ? seasonToggle() : '') + langToggle() + '</div>' +
+      '</div></div></div>';
+  }
+  var Guide = (function () {
+    var el = null, last = null, isOpen = false;
+    function build() {
+      el = document.getElementById('guide');
+      if (!el) { el = document.createElement('div'); el.id = 'guide'; el.className = 'guide'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'guide-t'); el.hidden = true; document.body.appendChild(el); }
+      el.innerHTML = guideHtml();
+      markHere();
+    }
+    function origin(btn) {
+      var r = btn ? btn.getBoundingClientRect() : { left: window.innerWidth - 40, top: 30, width: 0, height: 0 };
+      el.style.setProperty('--ox', Math.round(r.left + r.width / 2) + 'px');
+      el.style.setProperty('--oy', Math.round(r.top + r.height / 2) + 'px');
+    }
+    function open(instant) {
+      if (isOpen) return;
+      isOpen = true;
+      last = document.activeElement;
+      var btn = document.querySelector('.topbar .menu-btn');
+      origin(btn);
+      el.hidden = false;
+      el.classList.toggle('instant', !!instant);
+      root.classList.add('guide-open');
+      document.body.classList.add('locked');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add('open'); }); });
+      var here = el.querySelector('.gd-tile.is-here') || el.querySelector('.gd-tile');
+      setTimeout(function () { (el.querySelector('[data-guide-close]')).focus({ preventScroll: true }); }, instant ? 0 : 60);
+      if (here) here.scrollIntoView({ block: 'nearest' });
+    }
+    function close(noFocus) {
+      if (!isOpen) return;
+      isOpen = false;
+      var btn = document.querySelector('.topbar .menu-btn');
+      if (btn) { btn.setAttribute('aria-expanded', 'false'); origin(btn); }
+      el.classList.remove('open', 'instant');
+      root.classList.remove('guide-open');
+      document.body.classList.remove('locked');
+      setTimeout(function () { if (!isOpen) el.hidden = true; }, reduced ? 0 : 700);
+      if (!noFocus) {
+        var back = last && last !== document.body && document.contains(last) ? last : btn;
+        if (back) back.focus({ preventScroll: true });
+      }
+    }
+    function markHere() {
+      if (!el) return;
+      el.querySelectorAll('.gd-tile').forEach(function (a) { a.classList.toggle('is-here', a.getAttribute('data-go') === Spy.current); });
+    }
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.topbar .menu-btn')) { open(false); return; }
+      if (!isOpen) return;
+      if (e.target.closest('[data-guide-close]')) { close(); return; }
+      var tile = e.target.closest('[data-go]');
+      if (tile) {
+        e.preventDefault();
+        var target = document.getElementById(tile.getAttribute('data-go'));
+        close(true);
+        setTimeout(function () {
+          if (!target) return;
+          target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+          var h = target.querySelector('h2');
+          if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+        }, reduced ? 0 : 420);
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!isOpen) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key === 'Tab') {
+        var f = [].slice.call(el.querySelectorAll('a[href], button')).filter(function (x) { return x.offsetParent !== null; });
+        var first = f[0], lastF = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastF.focus(); }
+        else if (!e.shiftKey && document.activeElement === lastF) { e.preventDefault(); first.focus(); }
+      }
+    });
+    return { build: build, open: open, close: close, markHere: markHere, isOpen: function () { return isOpen; } };
+  })();
+
+  /* ---------------- gdje je gost na stranici (aktivni link u meniju) ---------------- */
+  var Spy = (function () {
+    var obs = null, api = { current: 'top', start: start, update: update };
+    function update() {
+      document.querySelectorAll('.topnav a').forEach(function (a) { a.classList.toggle('is-active', a.getAttribute('href') === '#' + api.current); });
+      var nav = document.querySelector('.topnav'), pill = nav && nav.querySelector('.topnav-pill'), act = nav && nav.querySelector('a.is-active');
+      if (pill) {
+        if (act) { pill.style.width = act.offsetWidth + 'px'; pill.style.transform = 'translateX(' + act.offsetLeft + 'px)'; pill.style.opacity = '1'; }
+        else pill.style.opacity = '0';
+      }
+      Guide.markHere();
+    }
+    function start() {
+      if (obs) obs.disconnect();
+      if (!('IntersectionObserver' in window)) return;
+      obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { api.current = en.target.id; update(); } });
+      }, { rootMargin: '-45% 0px -50% 0px' });
+      document.querySelectorAll('#top, #main section.sec[id]').forEach(function (s) { obs.observe(s); });
+    }
+    window.addEventListener('resize', function () { update(); });
+    return api;
+  })();
+
+  /* brojevi koji "odbroje" do vrijednosti kad se pojave */
+  function countUp(box) {
+    box.querySelectorAll('[data-count]').forEach(function (b) {
+      var to = +b.getAttribute('data-count'); b.removeAttribute('data-count');
+      if (reduced || to < 2) return;
+      var t0 = performance.now();
+      (function step(now) {
+        var k = Math.min(1, (now - t0) / 900), e = 1 - Math.pow(1 - k, 3);
+        b.textContent = String(Math.max(1, Math.round(to * e)));
+        if (k < 1) requestAnimationFrame(step);
+      })(t0);
+    });
+  }
+
+  /* svjetlo koje prati miš preko kartica (samo računar) */
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.addEventListener('pointermove', function (e) {
+      var c = e.target.closest && e.target.closest('.spot');
+      if (!c) return;
+      var r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    }, { passive: true });
+  }
+
   /* ---------------- crtanje ---------------- */
   function render() {
     root.lang = lang;
@@ -393,16 +593,18 @@
     document.querySelector('.skip').textContent = t('skip');
     document.getElementById('topbar').innerHTML = topbar();
     document.getElementById('top').innerHTML = hero();
-    document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + amenities() + breakfast() + prices() + calc() + location() + activities() + reviews() + faq() + instagram() + contact();
+    document.getElementById('main').innerHTML = facts() + gallery() + rooms() + about() + ribbon() + amenities() + breakfast() + prices() + calc() + location() + activities() + reviews() + faq() + instagram() + contact();
     document.getElementById('foot').innerHTML = footer();
     document.getElementById('dock').innerHTML = dock();
     var tt = document.getElementById('to-top-wrap');
     if (!tt) { tt = document.createElement('div'); tt.id = 'to-top-wrap'; document.body.appendChild(tt); }
     tt.innerHTML = toTop();
+    Guide.build();
     bindCalc();
     updateCalc(false);
     loadWeather();
     observeReveal();
+    Spy.start();
     FX.start(document.querySelector('.fx'));
   }
 
@@ -774,13 +976,15 @@
   /* ---------------- pojavljivanje pri skrolanju ---------------- */
   var io = null;
   function observeReveal() {
-    var els = document.querySelectorAll('.reveal');
+    var els = document.querySelectorAll('.reveal, .sec-head, .ribbon');
     if (reduced || !('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
     if (io) io.disconnect();
     io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); countUp(en.target); io.unobserve(en.target); } });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
     els.forEach(function (e) { io.observe(e); });
+    /* kartica sa činjenicama viri na dnu prvog ekrana: prikaži je odmah */
+    setTimeout(function () { document.querySelectorAll('.fact.reveal:not(.in)').forEach(function (e) { e.classList.add('in'); countUp(e); io.unobserve(e); }); }, 700);
   }
 
   /* ---------------- efekti: pahulje zimi, listići i svjetlost ljeti ---------------- */
@@ -855,8 +1059,10 @@
   function setLang(l) {
     if (l === lang) return;
     lang = l; save('planinka-lang', l);
-    var y = window.scrollY;
+    var y = window.scrollY, wasOpen = Guide.isOpen();
+    if (wasOpen) Guide.close(true);
     render();
+    if (wasOpen) Guide.open(true);
     document.querySelectorAll('.reveal').forEach(function (e) { e.classList.add('in'); });
     window.scrollTo(0, y);
   }
@@ -914,8 +1120,13 @@
       root.classList.toggle('show-top', y > window.innerHeight * 1.2);
       var prog = document.getElementById('to-top-prog');
       if (prog) { var max = document.documentElement.scrollHeight - window.innerHeight; prog.style.strokeDashoffset = String(138.2 * (1 - Math.min(1, y / Math.max(1, max)))); }
-      var art = document.querySelector('.hero-art');
-      if (art && !reduced && y < window.innerHeight) art.style.transform = 'translateY(' + (y * 0.25) + 'px) scale(1.04)';
+      var max2 = document.documentElement.scrollHeight - window.innerHeight;
+      root.style.setProperty('--progress', String(Math.min(1, y / Math.max(1, max2))));
+      var art = document.querySelector('.hero-art'), hin = document.querySelector('.hero-in');
+      if (!reduced && y < window.innerHeight) {
+        if (art) art.style.transform = 'translateY(' + (y * 0.25) + 'px) scale(1.04)';
+        if (hin) { hin.style.opacity = String(Math.max(0, 1 - y / (window.innerHeight * 0.75))); hin.style.transform = 'translateY(' + (y * -0.12) + 'px)'; }
+      }
     });
   }, { passive: true });
 
